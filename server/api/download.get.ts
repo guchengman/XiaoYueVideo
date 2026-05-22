@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process'
-import { createWriteStream, existsSync, mkdirSync, unlinkSync } from 'node:fs'
+import { createReadStream, createWriteStream, existsSync, mkdirSync, unlinkSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { promisify } from 'node:util'
 import { pipeline } from 'node:stream/promises'
@@ -7,7 +7,6 @@ import { pipeline } from 'node:stream/promises'
 const execFileAsync = promisify(execFile)
 const TEMP_DIR = resolve(process.cwd(), '..', 'temp', 'downloads')
 
-// yt-dlp path candidates (same logic as parse.post.ts)
 function findYtDlp(): string | null {
   for (const p of [
     process.env.YT_DLP_PATH,
@@ -23,7 +22,7 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const cdnUrl = query.url as string | undefined
   const audioUrl = query.audioUrl as string | undefined
-  const refUrl = query.ref as string | undefined  // original page URL, for yt-dlp
+  const refUrl = query.ref as string | undefined
 
   if (!cdnUrl) {
     throw createError({ statusCode: 400, message: '请提供下载地址' })
@@ -51,7 +50,7 @@ export default defineEventHandler(async (event) => {
       ], { timeout: 600000, windowsHide: true })
 
       if (!existsSync(tmpFile)) {
-        throw new Error('yt-dlp 下载完成但未生成文件')
+        throw createError({ statusCode: 502, message: '视频下载失败：yt-dlp 未生成输出文件' })
       }
 
       const { stat } = await import('node:fs/promises')
@@ -61,64 +60,69 @@ export default defineEventHandler(async (event) => {
       setHeader(event, 'Content-Length', st.size)
       setHeader(event, 'Access-Control-Allow-Origin', '*')
       return sendStream(event, createReadStream(tmpFile))
+    } catch (err: any) {
+      // yt-dlp error — fall through to CDN+ffmpeg fallback below
+      console.error('yt-dlp download failed:', err.message)
     } finally {
       try { unlinkSync(tmpFile) } catch { /* ignore */ }
     }
   }
 
-  // Fallback: try direct CDN fetch + ffmpeg merge
-  {
-    const tag = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
-    const tmpDir = TEMP_DIR
-    mkdirSync(tmpDir, { recursive: true })
-    const tmp = {
-      video: resolve(tmpDir, `${tag}_v.m4s`),
-      audio: resolve(tmpDir, `${tag}_a.m4s`),
-      out: resolve(tmpDir, `${tag}_out.mp4`),
+  // Fallback: direct CDN fetch + ffmpeg merge
+  const tag = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+  mkdirSync(TEMP_DIR, { recursive: true })
+  const tmp = {
+    video: resolve(TEMP_DIR, `${tag}_v.m4s`),
+    audio: resolve(TEMP_DIR, `${tag}_a.m4s`),
+    out: resolve(TEMP_DIR, `${tag}_out.mp4`),
+  }
+
+  function fetchOpts(u: string) {
+    const host = new URL(u).hostname
+    return {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        ...(host.includes('bilivideo.com') || host.includes('bilibili.com')
+          ? { 'Referer': 'https://www.bilibili.com/' }
+          : {}),
+      },
     }
+  }
 
-    function fetchOpts(u: string) {
-      const host = new URL(u).hostname
-      return {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          ...(host.includes('bilivideo.com') || host.includes('bilibili.com')
-            ? { 'Referer': 'https://www.bilibili.com/' }
-            : {}),
-        },
-      }
-    }
+  try {
+    const [vRes, aRes] = await Promise.all([
+      fetch(cdnUrl, fetchOpts(cdnUrl)),
+      fetch(audioUrl, fetchOpts(audioUrl)),
+    ])
+    if (!vRes.ok) throw new Error(`CDN video 返回 ${vRes.status}`)
+    if (!aRes.ok) throw new Error(`CDN audio 返回 ${aRes.status}`)
 
-    try {
-      const [vRes, aRes] = await Promise.all([
-        fetch(cdnUrl, fetchOpts(cdnUrl)),
-        fetch(audioUrl, fetchOpts(audioUrl)),
-      ])
-      if (!vRes.ok) throw new Error(`CDN video returned ${vRes.status}`)
-      if (!aRes.ok) throw new Error(`CDN audio returned ${aRes.status}`)
+    await Promise.all([
+      pipeline(vRes.body!, createWriteStream(tmp.video)),
+      pipeline(aRes.body!, createWriteStream(tmp.audio)),
+    ])
 
-      await Promise.all([
-        pipeline(vRes.body!, createWriteStream(tmp.video)),
-        pipeline(aRes.body!, createWriteStream(tmp.audio)),
-      ])
+    await execFileAsync('ffmpeg', [
+      '-i', tmp.video, '-i', tmp.audio,
+      '-c:v', 'copy', '-c:a', 'aac',
+      '-shortest', '-movflags', '+faststart', '-y', tmp.out,
+    ], { timeout: 300000 })
 
-      await execFileAsync('ffmpeg', [
-        '-i', tmp.video, '-i', tmp.audio,
-        '-c:v', 'copy', '-c:a', 'aac',
-        '-shortest', '-movflags', '+faststart', '-y', tmp.out,
-      ], { timeout: 300000 })
-
-      const { stat } = await import('node:fs/promises')
-      const st = await stat(tmp.out)
-      setHeader(event, 'Content-Type', 'video/mp4')
-      setHeader(event, 'Content-Disposition', 'attachment; filename="video.mp4"')
-      setHeader(event, 'Content-Length', st.size)
-      setHeader(event, 'Access-Control-Allow-Origin', '*')
-      return sendStream(event, createReadStream(tmp.out))
-    } finally {
-      for (const p of Object.values(tmp)) {
-        try { unlinkSync(p as string) } catch { /* ignore */ }
-      }
+    const { stat } = await import('node:fs/promises')
+    const st = await stat(tmp.out)
+    setHeader(event, 'Content-Type', 'video/mp4')
+    setHeader(event, 'Content-Disposition', 'attachment; filename="video.mp4"')
+    setHeader(event, 'Content-Length', st.size)
+    setHeader(event, 'Access-Control-Allow-Origin', '*')
+    return sendStream(event, createReadStream(tmp.out))
+  } catch (err: any) {
+    const msg = err.message || '未知错误'
+    // Log the actual error for debugging
+    console.error('download+merge failed:', msg)
+    throw createError({ statusCode: 502, message: `下载合并失败：${msg}` })
+  } finally {
+    for (const p of Object.values(tmp)) {
+      try { unlinkSync(p as string) } catch { /* ignore */ }
     }
   }
 })
