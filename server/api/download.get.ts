@@ -7,6 +7,12 @@ import { pipeline } from 'node:stream/promises'
 const execFileAsync = promisify(execFile)
 const TEMP_DIR = resolve(process.cwd(), '..', 'temp', 'downloads')
 
+const YT_DLP_ENV = {
+  ...process.env,
+  NODE: 'C:\\Program Files\\nodejs\\node.exe',
+  PATH: `C:\\Program Files\\nodejs;${process.env.PATH || ''}`,
+}
+
 function findYtDlp(): string | null {
   for (const p of [
     process.env.YT_DLP_PATH,
@@ -40,14 +46,19 @@ export default defineEventHandler(async (event) => {
     mkdirSync(TEMP_DIR, { recursive: true })
 
     try {
-      await execFileAsync(findYtDlp()!, [
+      const { stderr } = await execFileAsync(findYtDlp()!, [
         '--format', 'bv*+bestaudio/best',
         '--output', tmpFile,
         '--merge-output-format', 'mp4',
         '--no-playlist',
-        '--no-warnings',
+        '--quiet',
         refUrl,
-      ], { timeout: 600000, windowsHide: true })
+      ], {
+        timeout: 600000,
+        maxBuffer: 1024 * 1024,
+        windowsHide: true,
+        env: YT_DLP_ENV,
+      })
 
       if (!existsSync(tmpFile)) {
         throw createError({ statusCode: 502, message: '视频下载失败：yt-dlp 未生成输出文件' })
@@ -61,8 +72,8 @@ export default defineEventHandler(async (event) => {
       setHeader(event, 'Access-Control-Allow-Origin', '*')
       return sendStream(event, createReadStream(tmpFile))
     } catch (err: any) {
-      // yt-dlp error — fall through to CDN+ffmpeg fallback below
       console.error('yt-dlp download failed:', err.message)
+      if (err.stderr) console.error('yt-dlp stderr:', err.stderr.slice(0, 500))
     } finally {
       try { unlinkSync(tmpFile) } catch { /* ignore */ }
     }
