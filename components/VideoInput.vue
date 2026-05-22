@@ -52,12 +52,27 @@
           </select>
         </div>
 
+        <!-- Download progress bar -->
+        <div v-if="isDownloading" class="mb-3">
+          <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
+            <span>{{ phaseText }}</span>
+            <span>{{ downloadPct >= 0 ? downloadPct + '%' : '' }}</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+            <div
+              class="h-full rounded-full transition-all duration-300"
+              :class="downloadPct >= 0 ? 'bg-[#6366f1]' : 'bg-[#6366f1] animate-pulse'"
+              :style="{ width: downloadPct >= 0 ? downloadPct + '%' : '100%' }"
+            />
+          </div>
+        </div>
+
         <div class="flex flex-wrap gap-3">
-          <button class="button-1 text-sm" :disabled="!selectedFormat" @click="downloadVideo">
-            保存视频
+          <button class="button-1 text-sm" :disabled="!selectedFormat || isDownloading" @click="downloadVideo">
+            {{ isDownloading ? '准备中...' : '保存视频' }}
           </button>
           <button class="button-1 text-sm bg-blue-500 hover:bg-blue-600"
-            :disabled="!bestAudioFormat" @click="downloadAudio">
+            :disabled="!bestAudioFormat || isDownloading" @click="downloadAudio">
             提取音频
           </button>
         </div>
@@ -83,6 +98,20 @@ import type { VideoFormat } from '~/types'
 
 const store = useVideoStore()
 const selectedFormatId = ref('')
+
+// Download progress state
+const isDownloading = ref(false)
+const downloadPhase = ref('')
+const downloadPct = ref(0)
+
+const phaseText = computed(() => {
+  switch (downloadPhase.value) {
+    case 'video': return '正在下载视频...'
+    case 'audio': return '正在下载音频...'
+    case 'merge': return '正在合并音视频...'
+    default: return '准备中...'
+  }
+})
 
 const videoFormats = computed(() => {
   return (store.parseResult?.formats || []).filter(f => f.hasVideo)
@@ -119,28 +148,91 @@ async function downloadVideo() {
   if (!fmt) return
   store.addLog('info', `开始下载视频：${fmt.quality} (${fmt.ext})`)
 
-  let downloadUrl = `/api/download?url=${encodeURIComponent(fmt.url)}`
-
-  // If video has no audio, include the best audio track for server-side merging
-  if (!fmt.hasAudio && bestAudioFormat.value) {
-    downloadUrl += `&audioUrl=${encodeURIComponent(bestAudioFormat.value.url)}`
-    downloadUrl += `&ref=${encodeURIComponent(store.inputUrl)}`
-    store.addLog('info', '检测到视频不含音频，将自动合并音轨')
+  // Video already has audio — direct download
+  if (fmt.hasAudio || !bestAudioFormat.value) {
+    const downloadUrl = `/api/download?url=${encodeURIComponent(fmt.url)}`
+    triggerDownload(downloadUrl, `${store.parseResult?.displayTitle || 'video'}.${fmt.ext}`)
+    store.addLog('ok', '视频下载已启动')
+    return
   }
 
-  await triggerDownloadUrl(downloadUrl, `${store.parseResult?.displayTitle || 'video'}.${fmt.ext}`)
-  store.addLog('ok', '视频下载已启动')
+  // Need to merge video + audio — use progress flow
+  isDownloading.value = true
+  downloadPhase.value = 'video'
+  downloadPct.value = 0
+
+  let es: EventSource | null = null
+
+  try {
+    const res = await $fetch<{ code: number; data: { jobId: string } }>('/api/download', {
+      method: 'POST',
+      body: {
+        url: fmt.url,
+        audioUrl: bestAudioFormat.value.url,
+      },
+    })
+
+    const jobId = res.data.jobId
+
+    // Listen for progress via SSE
+    es = new EventSource(`/api/download-progress?jobId=${encodeURIComponent(jobId)}`)
+
+    await new Promise<void>((resolve, reject) => {
+      es!.addEventListener('progress', (e: MessageEvent) => {
+        const d = JSON.parse(e.data)
+        downloadPhase.value = d.phase
+        downloadPct.value = d.pct
+      })
+
+      es!.addEventListener('done', () => {
+        store.addLog('ok', '合并完成，正在保存文件...')
+        resolve()
+      })
+
+      es!.addEventListener('error', (e: MessageEvent) => {
+        if (e.data) {
+          try {
+            const d = JSON.parse(e.data)
+            reject(new Error(d.message || '下载失败'))
+          } catch {
+            reject(new Error('下载失败'))
+          }
+        }
+        // EventSource may reconnect on error without data - ignore those
+      })
+
+      es!.onerror = () => {
+        // Only reject if we've been waiting a while with no progress
+        // EventSource fires onerror for reconnection attempts too
+        if (es!.readyState === EventSource.CLOSED) {
+          reject(new Error('进度连接已断开'))
+        }
+      }
+    })
+
+    // Trigger file download
+    triggerDownload(`/api/download?jobId=${encodeURIComponent(jobId)}`, `${store.parseResult?.displayTitle || 'video'}.mp4`)
+    store.addLog('ok', '视频下载已启动')
+  } catch (e: any) {
+    const msg = e?.message || '下载失败'
+    store.addLog('error', msg)
+  } finally {
+    es?.close()
+    isDownloading.value = false
+    downloadPhase.value = ''
+    downloadPct.value = 0
+  }
 }
 
 async function downloadAudio() {
   const fmt = bestAudioFormat.value
   if (!fmt) return
   store.addLog('info', `开始提取音频：${fmt.ext}`)
-  await triggerDownloadUrl(`/api/download?url=${encodeURIComponent(fmt.url)}`, `${store.parseResult?.displayTitle || 'audio'}.${fmt.ext}`)
+  triggerDownload(`/api/download?url=${encodeURIComponent(fmt.url)}`, `${store.parseResult?.displayTitle || 'audio'}.${fmt.ext}`)
   store.addLog('ok', '音频下载已启动')
 }
 
-async function triggerDownloadUrl(downloadUrl: string, filename: string) {
+function triggerDownload(downloadUrl: string, filename: string) {
   try {
     const anchor = document.createElement('a')
     anchor.href = downloadUrl
