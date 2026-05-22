@@ -1,8 +1,17 @@
+import { resolve } from 'node:path'
+
 export default defineNuxtConfig({
   compatibilityDate: '2026-05-21',
   devtools: { enabled: true },
   modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss'],
   css: ['~/assets/css/main.css'],
+  vite: {
+    resolve: {
+      alias: {
+        '#app-manifest': resolve(__dirname, 'app', 'empty.mjs'),
+      }
+    }
+  },
   app: {
     head: {
       title: '全网视频在线下载_哔哩哔哩_抖音_YouTube_快手等平台视频保存_XiaoYueVideo',
