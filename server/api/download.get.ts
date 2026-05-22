@@ -46,9 +46,12 @@ export default defineEventHandler(async (event) => {
   if (host === 'tiktok') {
     const { getHandler } = await import('../downloaders/index')
     const pageUrl = query.pageUrl as string || cdnUrl
-    const jobId = createJob('mp4', query.filename as string || 'video.mp4')
+    const inFilename = query.filename as string || 'video.mp4'
+    const ext = inFilename.split('.').pop() || 'mp4'
+    const formatId = query.formatId as string | undefined
+    const jobId = createJob(ext, inFilename)
     const { handleDownload } = await getHandler(host)
-    handleDownload({ jobId, url: pageUrl }).catch((err) => {
+    handleDownload({ jobId, url: pageUrl, ext, formatId }).catch((err) => {
       markError(jobId, err.message || '下载失败')
     })
     return { code: 200, data: { jobId } }

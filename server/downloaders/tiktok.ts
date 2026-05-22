@@ -22,6 +22,8 @@ export async function handleDownload(params: {
   jobId: string
   url: string
   audioUrl?: string
+  ext?: string
+  formatId?: string
 }) {
   const ytDlpPath = findYtDlp()
   if (!ytDlpPath) {
@@ -29,23 +31,33 @@ export async function handleDownload(params: {
     return
   }
 
+  const ext = params.ext || 'mp4'
+  const isAudio = ext === 'm4a' || ext === 'mp3'
+  const outExt = isAudio ? ext : 'mp4'
   const tag = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
-  const outPath = resolve(TEMP_DIR, `${tag}.mp4`)
+  const outPath = resolve(TEMP_DIR, `${tag}.${outExt}`)
 
   return new Promise<void>((resolvePromise) => {
-    updateProgress(params.jobId, 'video', 0)
+    updateProgress(params.jobId, isAudio ? 'audio' : 'video', 0)
 
-    const child = rawExecFile(ytDlpPath, [
-      '--no-playlist', '--no-warnings',
-      '-o', outPath,
-      params.url,
-    ], { timeout: 300000, windowsHide: true, maxBuffer: 1024 * 1024 })
+    const baseArgs = ['--no-playlist', '--no-warnings', '-o', outPath]
+    if (isAudio) {
+      if (params.formatId) baseArgs.push('-f', params.formatId)
+      baseArgs.push('-x', '--audio-format', ext)
+    } else if (params.formatId) {
+      // Ensure audio by appending bestaudio fallback (ffmpeg merges if needed)
+      baseArgs.push('-f', `${params.formatId}+bestaudio/best[ext=mp4]`)
+    }
+    baseArgs.push(params.url)
 
+    const child = rawExecFile(ytDlpPath, baseArgs, { timeout: 300000, windowsHide: true, maxBuffer: 1024 * 1024 })
+
+    const phase = isAudio ? 'audio' : 'video'
     child.stderr?.on('data', (data: Buffer) => {
       const text = data.toString()
       const m = text.match(/(\d+(?:\.\d+)?)%/)
       if (m) {
-        updateProgress(params.jobId, 'video', Math.round(parseFloat(m[1])))
+        updateProgress(params.jobId, phase, Math.round(parseFloat(m[1])))
       }
     })
 

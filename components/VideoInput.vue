@@ -179,6 +179,7 @@ async function downloadVideo() {
             host: 'tiktok',
             filename: buildFilename(fmt.ext),
             pageUrl: store.inputUrl,
+            formatId: fmt.formatId,
           },
         })
         const jobId = res.data.jobId
@@ -237,7 +238,7 @@ async function downloadVideo() {
         host: store.parseResult?.host || '',
         ext: 'mp4',
         filename: buildFilename('mp4'),
-        ...(store.parseResult?.host === 'tiktok' ? { pageUrl: store.inputUrl } : {}),
+        ...(store.parseResult?.host === 'tiktok' ? { pageUrl: store.inputUrl, formatId: fmt.formatId } : {}),
       },
     })
 
@@ -309,6 +310,7 @@ async function downloadAudio() {
             host: 'tiktok',
             filename: buildFilename(fmt.ext),
             pageUrl: store.inputUrl,
+            formatId: fmt.formatId,
           },
         })
         const jobId = res.data.jobId
@@ -367,7 +369,7 @@ async function downloadAudio() {
         ext: fmt.ext,
         filename: buildFilename(fmt.ext),
         extractAudio: true,
-        ...(store.parseResult?.host === 'tiktok' ? { pageUrl: store.inputUrl } : {}),
+        ...(store.parseResult?.host === 'tiktok' ? { pageUrl: store.inputUrl, formatId: fmt.formatId } : {}),
       },
     })
 

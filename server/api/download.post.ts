@@ -11,6 +11,7 @@ export default defineEventHandler(async (event) => {
   const ext = body?.ext as string | undefined
   const filename = body?.filename as string | undefined
   const extractAudio = body?.extractAudio as boolean | undefined
+  const formatId = body?.formatId as string | undefined
   const pageUrl = body?.pageUrl as string | undefined
 
   if (!cdnUrl) {
@@ -26,7 +27,7 @@ export default defineEventHandler(async (event) => {
     mkdirSync(TEMP_DIR, { recursive: true })
     const { handleDownload } = await getHandler(host)
     // TikTok downloader uses yt-dlp which needs the original page URL, not CDN URL
-    handleDownload({ jobId, url: pageUrl || cdnUrl }).catch((err) => {
+    handleDownload({ jobId, url: pageUrl || cdnUrl, ext, formatId }).catch((err) => {
       markError(jobId, err.message || '下载失败')
     })
     return { code: 200, data: { jobId } }
@@ -75,7 +76,7 @@ export default defineEventHandler(async (event) => {
   // Dispatch to platform-specific downloader
   const { handleDownload } = await getHandler(host || 'default')
   // TikTok downloader uses yt-dlp which needs the original page URL, not CDN URL
-  handleDownload({ jobId, url: pageUrl || cdnUrl, audioUrl }).catch((err) => {
+  handleDownload({ jobId, url: pageUrl || cdnUrl, audioUrl, ext, formatId }).catch((err) => {
     markError(jobId, err.message || '下载失败')
   })
 
