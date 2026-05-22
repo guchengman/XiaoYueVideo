@@ -251,12 +251,60 @@ async function parseWithPlaywright(cleanUrl: string): Promise<DouyinParseResult 
 // ── Public API ────────────────────────────────────────────────────
 
 /**
+ * Resolve a v.douyin.com short link to the full video URL.
+ * Douyin short links redirect to https://www.douyin.com/video/<id>.
+ */
+/**
+ * Extract video ID from various Douyin URL formats.
+ * Supports: /video/<id>, /share/video/<id>, /note/<id>
+ */
+function extractVideoId(url: string): string | null {
+  const m = url.match(/\/(?:share\/)?(?:video|note)\/(\d{15,})/)
+  return m ? m[1] : null
+}
+
+/**
+ * Normalize any Douyin URL to https://www.douyin.com/video/<id>
+ */
+function normalizeVideoUrl(url: string): string {
+  const vid = extractVideoId(url)
+  if (vid) return `https://www.douyin.com/video/${vid}`
+  return url
+}
+
+async function resolveShortLink(shortUrl: string): Promise<string> {
+  if (!shortUrl.includes('v.douyin.com')) return normalizeVideoUrl(shortUrl)
+
+  try {
+    const resp = await fetch(shortUrl, {
+      redirect: 'manual',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      },
+    })
+    const location = resp.headers.get('location') || ''
+    if (location) {
+      const resolved = location.startsWith('http')
+        ? location
+        : `https://www.iesdouyin.com${location.startsWith('/') ? '' : '/'}${location}`
+      const normalized = normalizeVideoUrl(resolved)
+      console.log(`[douyin] Resolved: ${shortUrl} → ${normalized}`)
+      return normalized
+    }
+    return normalizeVideoUrl(shortUrl)
+  } catch {
+    return normalizeVideoUrl(shortUrl)
+  }
+}
+
+/**
  * Parse a Douyin video.
  *
  * Strategy:
- *   1. Python / curl_cffi (Chrome TLS impersonation) — fastest, works
+ *   1. Resolve short links (v.douyin.com → full video URL)
+ *   2. Python / curl_cffi (Chrome TLS impersonation) — fastest, works
  *      when the WAF only checks TLS fingerprint.
- *   2. Playwright / headless Chromium — solves JS-based anti-bot
+ *   3. Playwright / headless Chromium — solves JS-based anti-bot
  *      challenges via real browser execution.
  *
  * Returns null when all strategies fail (caller falls through to yt-dlp).
@@ -266,10 +314,13 @@ export async function parseDouyinVideo(
 ): Promise<DouyinParseResult | null> {
   if (!hasCookies()) return null
 
+  // Step 0: Resolve v.douyin.com short links to full video URL
+  const resolvedUrl = await resolveShortLink(cleanUrl)
+
   // Strategy 1: Python/curl_cffi (Chrome TLS impersonation + X-Bogus)
-  const pyResult = await parseWithPython(cleanUrl)
+  const pyResult = await parseWithPython(resolvedUrl)
   if (pyResult) return pyResult
 
   // Strategy 2: Playwright / headless Chromium (JS anti-bot execution)
-  return parseWithPlaywright(cleanUrl)
+  return parseWithPlaywright(resolvedUrl)
 }

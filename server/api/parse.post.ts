@@ -187,7 +187,9 @@ export default defineEventHandler(async (event) => {
           return stdout
         } catch (e: any) {
           const msg = e.stderr?.toString() || ''
-          if (!msg.includes('Could not copy') && !msg.includes('could not find') && !msg.includes('decrypt_error') && !msg.includes('operating system error 32')) {
+          if (!msg.includes('Could not copy') && !msg.includes('could not find')
+            && !msg.includes('decrypt_error') && !msg.includes('operating system error 32')
+            && !msg.includes('DPAPI') && !msg.includes('Failed to decrypt')) {
             throw e
           }
         }

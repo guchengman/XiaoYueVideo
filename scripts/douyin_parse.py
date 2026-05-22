@@ -11,7 +11,7 @@ import os
 import re
 import sys
 
-COOKIE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '..', 'cookies')
+COOKIE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'cookies')
 
 def load_cookies():
     fp = os.path.join(COOKIE_DIR, 'douyin_cookies.txt')
@@ -30,10 +30,8 @@ def load_cookies():
 
 
 def extract_video_id(url):
-    m = re.search(r'/video/(\d{19,})', url)
-    if m:
-        return m.group(1)
-    m = re.search(r'/note/(\d{19,})', url)
+    # /video/<id>, /share/video/<id>, /note/<id>
+    m = re.search(r'/(?:share/)?(?:video|note)/(\d{15,})', url)
     if m:
         return m.group(1)
     return None

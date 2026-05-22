@@ -57,6 +57,9 @@ export function getFetchOpts(host: string): RequestInit {
   if (host === 'weibo') {
     return { headers: { 'User-Agent': ua, Referer: 'https://weibo.com/' } }
   }
+  if (host === 'tiktok') {
+    return { headers: { 'User-Agent': ua, Referer: 'https://www.tiktok.com/' } }
+  }
   return { headers: { 'User-Agent': ua } }
 }
 

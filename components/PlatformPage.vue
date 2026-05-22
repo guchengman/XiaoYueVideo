@@ -7,6 +7,15 @@
       <h2 class="py-3 text-sm text-gray-500">
         免费在线解析{{ platformName }}视频，高清无水印，极速稳定
       </h2>
+      <a :href="platformUrl" target="_blank" rel="noopener noreferrer"
+        class="inline-flex items-center gap-1 text-sm text-[#6366f1] hover:underline mt-1">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+          <polyline points="15 3 21 3 21 9" />
+          <line x1="10" y1="14" x2="21" y2="3" />
+        </svg>
+        访问 {{ platformName }} 官网
+      </a>
     </div>
 
     <VideoInput />
@@ -41,6 +50,37 @@ const props = defineProps<{
   platformName: string
   platformNameCn: string
 }>()
+
+const platformUrls: Record<string, string> = {
+  bilibili: 'https://www.bilibili.com',
+  douyin: 'https://www.douyin.com',
+  kuaishou: 'https://www.kuaishou.com',
+  weibo: 'https://weibo.com',
+  youtube: 'https://www.youtube.com',
+  twitter: 'https://x.com',
+  tiktok: 'https://www.tiktok.com',
+  instagram: 'https://www.instagram.com',
+  xiaohongshu: 'https://www.xiaohongshu.com',
+  ixigua: 'https://www.ixigua.com',
+  zhihu: 'https://www.zhihu.com',
+  acfun: 'https://www.acfun.cn',
+  huya: 'https://www.huya.com',
+  douyu: 'https://www.douyu.com',
+  vimeo: 'https://vimeo.com',
+  pinterest: 'https://www.pinterest.com',
+  facebook: 'https://www.facebook.com',
+  haokan: 'https://haokan.baidu.com',
+  cctv: 'https://www.cctv.com',
+  xpc: 'https://www.xinpianchang.com',
+  toutiao: 'https://www.toutiao.com',
+  souhu: 'https://tv.sohu.com',
+  net163: 'https://v.163.com',
+  threads: 'https://www.threads.net',
+  weverse: 'https://weverse.io',
+  gzh: 'https://mp.weixin.qq.com',
+}
+
+const platformUrl = computed(() => platformUrls[props.platformId] || `https://www.${props.platformId}.com`)
 
 useHead({
   title: `${props.platformName}视频下载_免费在线保存${props.platformName}视频_XiaoYueVideo`

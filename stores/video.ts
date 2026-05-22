@@ -90,7 +90,7 @@ export const useVideoStore = defineStore('video', () => {
       if (history.value.length > MAX_HISTORY) history.value.pop()
       saveHistory(history.value)
     } catch (e: any) {
-      const msg = e?.data?.statusMessage || e?.message || '解析未成功，请确认链接是否有效'
+      const msg = e?.data?.message || e?.data?.statusMessage || e?.message || '解析未成功，请确认链接是否有效'
       error.value = msg
       addLog('error', msg)
     } finally {

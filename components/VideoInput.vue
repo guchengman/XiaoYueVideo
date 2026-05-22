@@ -123,9 +123,20 @@ const selectedFormat = computed(() => {
 })
 
 const bestAudioFormat = computed(() => {
-  const audioOnly = (store.parseResult?.formats || []).filter(f => !f.hasVideo && f.hasAudio)
-  return audioOnly.sort((a, b) => b.filesize - a.filesize)[0] || null
+  const fmts = store.parseResult?.formats || []
+  // Prefer audio-only formats
+  const audioOnly = fmts.filter(f => !f.hasVideo && f.hasAudio).sort((a, b) => b.filesize - a.filesize)
+  if (audioOnly.length > 0) return audioOnly[0]
+  // Fallback: any format with audio (will be extracted via ffmpeg)
+  return fmts.filter(f => f.hasAudio).sort((a, b) => b.filesize - a.filesize)[0] || null
 })
+
+function buildFilename(ext: string): string {
+  const host = store.parseResult?.host || 'video'
+  const title = store.parseResult?.displayTitle || ''
+  const safeTitle = title.replace(/[\\/:*?"<>|#]/g, '').slice(0, 60) || `video_${Date.now().toString(36)}`
+  return `${host}_${safeTitle}.${ext}`
+}
 
 function handleParse() {
   store.parseVideo()
@@ -148,15 +159,69 @@ async function downloadVideo() {
   if (!fmt) return
   store.addLog('info', `开始下载视频：${fmt.quality} (${fmt.ext})`)
 
-  // Video already has audio — direct download
-  if (fmt.hasAudio || !bestAudioFormat.value) {
-    const downloadUrl = `/api/download?url=${encodeURIComponent(fmt.url)}`
-    triggerDownload(downloadUrl, `${store.parseResult?.displayTitle || 'video'}.${fmt.ext}`)
+  const isM3u8 = fmt.url.includes('.m3u8')
+
+  // Single file with audio — proxy download via server for proper headers
+  // m3u8 streams need server-side ffmpeg conversion, so skip the quick path
+  // TikTok uses async job pattern (yt-dlp downloader) instead of direct stream
+  if (!isM3u8 && (fmt.hasAudio || !bestAudioFormat.value)) {
+    const isTikTok = store.parseResult?.host === 'tiktok'
+
+    if (isTikTok) {
+      isDownloading.value = true
+      downloadPhase.value = 'video'
+      downloadPct.value = 0
+      let es: EventSource | null = null
+      try {
+        const res = await $fetch<{ code: number; data: { jobId: string } }>('/api/download', {
+          params: {
+            url: fmt.url,
+            host: 'tiktok',
+            filename: buildFilename(fmt.ext),
+            pageUrl: store.inputUrl,
+          },
+        })
+        const jobId = res.data.jobId
+        es = new EventSource(`/api/download-progress?jobId=${encodeURIComponent(jobId)}`)
+        await new Promise<void>((resolve, reject) => {
+          es!.addEventListener('progress', (e: MessageEvent) => {
+            const d = JSON.parse(e.data)
+            downloadPhase.value = d.phase
+            downloadPct.value = d.pct
+          })
+          es!.addEventListener('done', () => { resolve() })
+          es!.addEventListener('error', (e: Event) => {
+            const target = e.target as EventSource
+            if (target.readyState === EventSource.CLOSED) {
+              reject(new Error('下载进度连接已断开'))
+            }
+          })
+        })
+        triggerDownload(`/api/download?jobId=${encodeURIComponent(jobId)}`, buildFilename('mp4'))
+        store.addLog('ok', '视频下载已启动')
+      } catch (e: any) {
+        const msg = e?.message || '下载失败'
+        store.addLog('error', msg)
+      } finally {
+        es?.close()
+        isDownloading.value = false
+        downloadPhase.value = ''
+        downloadPct.value = 0
+      }
+      return
+    }
+
+    const params = new URLSearchParams({
+      url: fmt.url,
+      host: store.parseResult?.host || '',
+      filename: buildFilename(fmt.ext),
+    })
+    triggerDownload(`/api/download?${params}`, buildFilename(fmt.ext))
     store.addLog('ok', '视频下载已启动')
     return
   }
 
-  // Need to merge video + audio — use progress flow
+  // Need to merge video + audio — use server-side pipeline
   isDownloading.value = true
   downloadPhase.value = 'video'
   downloadPct.value = 0
@@ -170,12 +235,14 @@ async function downloadVideo() {
         url: fmt.url,
         audioUrl: bestAudioFormat.value.url,
         host: store.parseResult?.host || '',
+        ext: 'mp4',
+        filename: buildFilename('mp4'),
+        ...(store.parseResult?.host === 'tiktok' ? { pageUrl: store.inputUrl } : {}),
       },
     })
 
     const jobId = res.data.jobId
 
-    // Listen for progress via SSE
     es = new EventSource(`/api/download-progress?jobId=${encodeURIComponent(jobId)}`)
 
     await new Promise<void>((resolve, reject) => {
@@ -199,20 +266,16 @@ async function downloadVideo() {
             reject(new Error('下载失败'))
           }
         }
-        // EventSource may reconnect on error without data - ignore those
       })
 
       es!.onerror = () => {
-        // Only reject if we've been waiting a while with no progress
-        // EventSource fires onerror for reconnection attempts too
         if (es!.readyState === EventSource.CLOSED) {
           reject(new Error('进度连接已断开'))
         }
       }
     })
 
-    // Trigger file download
-    triggerDownload(`/api/download?jobId=${encodeURIComponent(jobId)}`, `${store.parseResult?.displayTitle || 'video'}.mp4`)
+    triggerDownload(`/api/download?jobId=${encodeURIComponent(jobId)}`, buildFilename('mp4'))
     store.addLog('ok', '视频下载已启动')
   } catch (e: any) {
     const msg = e?.message || '下载失败'
@@ -230,6 +293,65 @@ async function downloadAudio() {
   if (!fmt) return
   store.addLog('info', `开始提取音频：${fmt.ext}`)
 
+  // Audio-only format — proxy download via server
+  if (!fmt.hasVideo) {
+    const isTikTok = store.parseResult?.host === 'tiktok'
+
+    if (isTikTok) {
+      isDownloading.value = true
+      downloadPhase.value = 'audio'
+      downloadPct.value = 0
+      let es: EventSource | null = null
+      try {
+        const res = await $fetch<{ code: number; data: { jobId: string } }>('/api/download', {
+          params: {
+            url: fmt.url,
+            host: 'tiktok',
+            filename: buildFilename(fmt.ext),
+            pageUrl: store.inputUrl,
+          },
+        })
+        const jobId = res.data.jobId
+        es = new EventSource(`/api/download-progress?jobId=${encodeURIComponent(jobId)}`)
+        await new Promise<void>((resolve, reject) => {
+          es!.addEventListener('progress', (e: MessageEvent) => {
+            const d = JSON.parse(e.data)
+            downloadPhase.value = d.phase
+            downloadPct.value = d.pct
+          })
+          es!.addEventListener('done', () => { resolve() })
+          es!.addEventListener('error', (e: Event) => {
+            const target = e.target as EventSource
+            if (target.readyState === EventSource.CLOSED) {
+              reject(new Error('下载进度连接已断开'))
+            }
+          })
+        })
+        triggerDownload(`/api/download?jobId=${encodeURIComponent(jobId)}`, buildFilename(fmt.ext))
+        store.addLog('ok', '音频下载已启动')
+      } catch (e: any) {
+        const msg = e?.message || '下载失败'
+        store.addLog('error', msg)
+      } finally {
+        es?.close()
+        isDownloading.value = false
+        downloadPhase.value = ''
+        downloadPct.value = 0
+      }
+      return
+    }
+
+    const params = new URLSearchParams({
+      url: fmt.url,
+      host: store.parseResult?.host || '',
+      filename: buildFilename(fmt.ext),
+    })
+    triggerDownload(`/api/download?${params}`, buildFilename(fmt.ext))
+    store.addLog('ok', '音频下载已启动')
+    return
+  }
+
+  // Video format — server extracts audio via ffmpeg
   isDownloading.value = true
   downloadPhase.value = 'video'
   downloadPct.value = 0
@@ -243,6 +365,9 @@ async function downloadAudio() {
         url: fmt.url,
         host: store.parseResult?.host || '',
         ext: fmt.ext,
+        filename: buildFilename(fmt.ext),
+        extractAudio: true,
+        ...(store.parseResult?.host === 'tiktok' ? { pageUrl: store.inputUrl } : {}),
       },
     })
 
@@ -279,8 +404,8 @@ async function downloadAudio() {
       }
     })
 
-    triggerDownload(`/api/download?jobId=${encodeURIComponent(jobId)}`, `${store.parseResult?.displayTitle || 'audio'}.${fmt.ext}`)
-    store.addLog('ok', '音频下载已启动')
+    triggerDownload(`/api/download?jobId=${encodeURIComponent(jobId)}`, buildFilename(fmt.ext))
+    store.addLog('ok', '音频下载完成')
   } catch (e: any) {
     const msg = e?.message || '下载失败'
     store.addLog('error', msg)
