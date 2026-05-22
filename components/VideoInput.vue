@@ -169,6 +169,7 @@ async function downloadVideo() {
       body: {
         url: fmt.url,
         audioUrl: bestAudioFormat.value.url,
+        host: store.parseResult?.host || '',
       },
     })
 
