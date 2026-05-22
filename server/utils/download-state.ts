@@ -4,6 +4,7 @@ export interface DownloadJob {
   pct: number
   filePath: string
   error: string
+  ext: string
 }
 
 const jobs = new Map<string, DownloadJob>()
@@ -16,10 +17,10 @@ function gc() {
   }
 }
 
-export function createJob(): string {
+export function createJob(ext = 'mp4'): string {
   gc()
   const id = Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8)
-  jobs.set(id, { id, phase: 'video', pct: 0, filePath: '', error: '' })
+  jobs.set(id, { id, phase: 'video', pct: 0, filePath: '', error: '', ext })
   return id
 }
 

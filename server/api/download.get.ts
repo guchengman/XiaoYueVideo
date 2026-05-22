@@ -16,8 +16,9 @@ export default defineEventHandler(async (event) => {
 
     const { stat } = await import('node:fs/promises')
     const st = await stat(job.filePath)
-    setHeader(event, 'Content-Type', 'video/mp4')
-    setHeader(event, 'Content-Disposition', 'attachment; filename="video.mp4"')
+    const mime = job.ext === 'm4a' ? 'audio/mp4' : 'video/mp4'
+    setHeader(event, 'Content-Type', mime)
+    setHeader(event, 'Content-Disposition', `attachment; filename="video.${job.ext}"`)
     setHeader(event, 'Content-Length', st.size)
     setHeader(event, 'Access-Control-Allow-Origin', '*')
 

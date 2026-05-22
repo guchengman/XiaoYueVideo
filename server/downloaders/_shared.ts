@@ -43,6 +43,14 @@ export async function downloadWithProgress(
   )
 }
 
+export function getFetchOpts(host: string): RequestInit {
+  const ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+  if (host === 'bilibili') {
+    return { headers: { 'User-Agent': ua, Referer: 'https://www.bilibili.com/' } }
+  }
+  return { headers: { 'User-Agent': ua } }
+}
+
 export async function mergeToMp4(videoPath: string, audioPath: string, outPath: string) {
   await execFileAsync('ffmpeg', [
     '-i', videoPath, '-i', audioPath,

@@ -229,8 +229,67 @@ async function downloadAudio() {
   const fmt = bestAudioFormat.value
   if (!fmt) return
   store.addLog('info', `开始提取音频：${fmt.ext}`)
-  triggerDownload(`/api/download?url=${encodeURIComponent(fmt.url)}`, `${store.parseResult?.displayTitle || 'audio'}.${fmt.ext}`)
-  store.addLog('ok', '音频下载已启动')
+
+  isDownloading.value = true
+  downloadPhase.value = 'video'
+  downloadPct.value = 0
+
+  let es: EventSource | null = null
+
+  try {
+    const res = await $fetch<{ code: number; data: { jobId: string } }>('/api/download', {
+      method: 'POST',
+      body: {
+        url: fmt.url,
+        host: store.parseResult?.host || '',
+        ext: fmt.ext,
+      },
+    })
+
+    const jobId = res.data.jobId
+
+    es = new EventSource(`/api/download-progress?jobId=${encodeURIComponent(jobId)}`)
+
+    await new Promise<void>((resolve, reject) => {
+      es!.addEventListener('progress', (e: MessageEvent) => {
+        const d = JSON.parse(e.data)
+        downloadPhase.value = d.phase
+        downloadPct.value = d.pct
+      })
+
+      es!.addEventListener('done', () => {
+        resolve()
+      })
+
+      es!.addEventListener('error', (e: MessageEvent) => {
+        if (e.data) {
+          try {
+            const d = JSON.parse(e.data)
+            reject(new Error(d.message || '下载失败'))
+          } catch {
+            reject(new Error('下载失败'))
+          }
+        }
+      })
+
+      es!.onerror = () => {
+        if (es!.readyState === EventSource.CLOSED) {
+          reject(new Error('进度连接已断开'))
+        }
+      }
+    })
+
+    triggerDownload(`/api/download?jobId=${encodeURIComponent(jobId)}`, `${store.parseResult?.displayTitle || 'audio'}.${fmt.ext}`)
+    store.addLog('ok', '音频下载已启动')
+  } catch (e: any) {
+    const msg = e?.message || '下载失败'
+    store.addLog('error', msg)
+  } finally {
+    es?.close()
+    isDownloading.value = false
+    downloadPhase.value = ''
+    downloadPct.value = 0
+  }
 }
 
 function triggerDownload(downloadUrl: string, filename: string) {
