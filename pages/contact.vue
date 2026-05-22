@@ -77,7 +77,7 @@ async function submitFeedback() {
     form.content = ''
     setTimeout(() => { submitted.value = false }, 3000)
   } catch (e: any) {
-    submitError.value = e?.data?.statusMessage || '提交失败，请稍后重试'
+    submitError.value = e?.data?.message || '提交失败，请稍后重试'
   } finally {
     submitting.value = false
   }

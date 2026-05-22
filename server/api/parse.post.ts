@@ -84,13 +84,13 @@ export default defineEventHandler(async (event) => {
   const url = body?.url
 
   if (!url) {
-    throw createError({ statusCode: 400, statusMessage: '请提供视频链接' })
+    throw createError({ statusCode: 400, message: '请提供视频链接' })
   }
 
   // Extract real URL from mixed text (抖音分享文本等)
   const cleanUrl = extractUrl(url) || url
   if (!cleanUrl) {
-    throw createError({ statusCode: 400, statusMessage: '未找到有效的视频链接' })
+    throw createError({ statusCode: 400, message: '未找到有效的视频链接' })
   }
 
   const platform = detectPlatform(cleanUrl)
@@ -194,7 +194,7 @@ export default defineEventHandler(async (event) => {
     }
   } catch (err: any) {
     if (err.killed || err.signal) {
-      throw createError({ statusCode: 504, statusMessage: '视频解析超时，请稍后重试' })
+      throw createError({ statusCode: 504, message: '视频解析超时，请稍后重试' })
     }
 
     let msg = err.stderr?.split('\n')[0] || err.message || '未知错误'
@@ -209,6 +209,6 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    throw createError({ statusCode: 422, statusMessage: `解析失败：${msg}` })
+    throw createError({ statusCode: 422, message: `解析失败：${msg}` })
   }
 })

@@ -118,6 +118,7 @@
 <script setup lang="ts">
 const platforms = [
   { value: 'douyin', label: '抖音 Douyin' },
+  { value: 'bilibili', label: '哔哩哔哩 Bilibili' },
   { value: 'tiktok', label: 'TikTok' },
   { value: 'twitter', label: 'Twitter/X' },
   { value: 'instagram', label: 'Instagram' },
@@ -137,6 +138,7 @@ const msgType = ref<'ok' | 'error'>('ok')
 const platformDomain = computed(() => {
   const map: Record<string, string> = {
     douyin: 'douyin.com',
+    bilibili: 'bilibili.com',
     tiktok: 'tiktok.com',
     twitter: 'twitter.com',
     instagram: 'instagram.com',
@@ -174,7 +176,7 @@ async function saveCookies() {
     msgType.value = 'ok'
     await checkStatus()
   } catch (e: any) {
-    msg.value = e?.data?.statusMessage || '保存失败'
+    msg.value = e?.data?.message || '保存失败'
     msgType.value = 'error'
   } finally {
     saving.value = false
@@ -193,7 +195,7 @@ async function clearCookies() {
     cookieText.value = ''
     await checkStatus()
   } catch (e: any) {
-    msg.value = e?.data?.statusMessage || '清除失败'
+    msg.value = e?.data?.message || '清除失败'
     msgType.value = 'error'
   }
 }

@@ -118,7 +118,17 @@ async function downloadVideo() {
   const fmt = selectedFormat.value
   if (!fmt) return
   store.addLog('info', `开始下载视频：${fmt.quality} (${fmt.ext})`)
-  await triggerDownload(fmt.url, `${store.parseResult?.displayTitle || 'video'}.${fmt.ext}`)
+
+  let downloadUrl = `/api/download?url=${encodeURIComponent(fmt.url)}`
+
+  // If video has no audio, include the best audio track for server-side merging
+  if (!fmt.hasAudio && bestAudioFormat.value) {
+    downloadUrl += `&audioUrl=${encodeURIComponent(bestAudioFormat.value.url)}`
+    downloadUrl += `&ref=${encodeURIComponent(store.inputUrl)}`
+    store.addLog('info', '检测到视频不含音频，将自动合并音轨')
+  }
+
+  await triggerDownloadUrl(downloadUrl, `${store.parseResult?.displayTitle || 'video'}.${fmt.ext}`)
   store.addLog('ok', '视频下载已启动')
 }
 
@@ -126,20 +136,20 @@ async function downloadAudio() {
   const fmt = bestAudioFormat.value
   if (!fmt) return
   store.addLog('info', `开始提取音频：${fmt.ext}`)
-  await triggerDownload(fmt.url, `${store.parseResult?.displayTitle || 'audio'}.${fmt.ext}`)
+  await triggerDownloadUrl(`/api/download?url=${encodeURIComponent(fmt.url)}`, `${store.parseResult?.displayTitle || 'audio'}.${fmt.ext}`)
   store.addLog('ok', '音频下载已启动')
 }
 
-async function triggerDownload(url: string, filename: string) {
+async function triggerDownloadUrl(downloadUrl: string, filename: string) {
   try {
     const anchor = document.createElement('a')
-    anchor.href = `/api/download?url=${encodeURIComponent(url)}`
+    anchor.href = downloadUrl
     anchor.download = filename
     document.body.appendChild(anchor)
     anchor.click()
     document.body.removeChild(anchor)
   } catch {
-    window.open(url, '_blank')
+    window.open(downloadUrl, '_blank')
   }
 }
 

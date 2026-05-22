@@ -101,7 +101,7 @@ async function play() {
       errorMsg.value = '未能解析出可播放的视频源'
     }
   } catch (e: any) {
-    errorMsg.value = e?.data?.statusMessage || '解析失败，请检查链接'
+    errorMsg.value = e?.data?.message || '解析失败，请检查链接'
   } finally {
     loading.value = false
   }

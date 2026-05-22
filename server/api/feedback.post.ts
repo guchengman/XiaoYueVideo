@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
   const { email, content } = body || {}
 
   if (!content?.trim()) {
-    throw createError({ statusCode: 400, statusMessage: '请填写反馈内容' })
+    throw createError({ statusCode: 400, message: '请填写反馈内容' })
   }
 
   const logDir = resolve(process.cwd(), '..', 'logs')

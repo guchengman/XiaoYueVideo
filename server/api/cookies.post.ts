@@ -6,8 +6,8 @@ const COOKIE_DIR = resolve(process.cwd(), '..', 'cookies')
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const { platform, content } = body || {}
-  if (!platform) throw createError({ statusCode: 400, statusMessage: '缺少平台参数' })
-  if (!content) throw createError({ statusCode: 400, statusMessage: '缺少Cookie内容' })
+  if (!platform) throw createError({ statusCode: 400, message: '缺少平台参数' })
+  if (!content) throw createError({ statusCode: 400, message: '缺少Cookie内容' })
 
   if (!existsSync(COOKIE_DIR)) mkdirSync(COOKIE_DIR, { recursive: true })
 
