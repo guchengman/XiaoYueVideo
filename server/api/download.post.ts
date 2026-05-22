@@ -1,4 +1,5 @@
 import { mkdirSync } from 'node:fs'
+import { getHandler } from '../downloaders/index'
 import { TEMP_DIR } from '../downloaders/_shared'
 
 export default defineEventHandler(async (event) => {
