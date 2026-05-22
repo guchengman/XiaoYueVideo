@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 const execFileAsync = promisify(execFile)
-const COOKIE_DIR = resolve(process.cwd(), '..', 'cookies')
+const COOKIE_DIR = resolve(process.cwd(), 'cookies')
 
 interface FormatInfo {
   formatId: string

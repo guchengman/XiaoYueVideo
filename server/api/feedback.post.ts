@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: '请填写反馈内容' })
   }
 
-  const logDir = resolve(process.cwd(), '..', 'logs')
+  const logDir = resolve(process.cwd(), 'logs')
   ensureDir(logDir)
 
   const logFile = resolve(logDir, `feedback_${formatDate()}.csv`)

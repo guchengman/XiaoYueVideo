@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-const COOKIE_DIR = resolve(process.cwd(), '..', 'cookies')
+const COOKIE_DIR = resolve(process.cwd(), 'cookies')
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)

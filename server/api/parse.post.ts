@@ -4,7 +4,7 @@ import { promisify } from 'node:util'
 import { resolve } from 'node:path'
 
 const execFileAsync = promisify(execFile)
-const COOKIE_DIR = resolve(process.cwd(), '..', 'cookies')
+const COOKIE_DIR = resolve(process.cwd(), 'cookies')
 
 /** Ensure yt-dlp can find Node.js for JS runtime (anti-bot challenge solving). */
 const YT_DLP_ENV = {
@@ -52,7 +52,6 @@ const hostMap: Record<string, { host: string; hostAlias: string }> = {
 function findYtDlp(): string | null {
   const candidates = [
     process.env.YT_DLP_PATH,
-    resolve(process.cwd(), '..', 'tools', 'yt-dlp.exe'),
     resolve(process.cwd(), 'tools', 'yt-dlp.exe'),
   ]
   for (const p of candidates) {

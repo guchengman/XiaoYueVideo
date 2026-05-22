@@ -5,7 +5,7 @@ import { promisify } from 'node:util'
 import { pipeline } from 'node:stream/promises'
 
 const execFileAsync = promisify(execFile)
-const TEMP_DIR = resolve(process.cwd(), '..', 'temp', 'downloads')
+const TEMP_DIR = resolve(process.cwd(), 'temp', 'downloads')
 
 const YT_DLP_ENV = {
   ...process.env,
@@ -16,7 +16,6 @@ const YT_DLP_ENV = {
 function findYtDlp(): string | null {
   for (const p of [
     process.env.YT_DLP_PATH,
-    resolve(process.cwd(), '..', 'tools', 'yt-dlp.exe'),
     resolve(process.cwd(), 'tools', 'yt-dlp.exe'),
   ]) {
     if (p && existsSync(p)) return p
