@@ -119,6 +119,8 @@
 const platforms = [
   { value: 'douyin', label: '抖音 Douyin' },
   { value: 'bilibili', label: '哔哩哔哩 Bilibili' },
+  { value: 'kuaishou', label: '快手 Kuaishou' },
+  { value: 'weibo', label: '微博 Weibo' },
   { value: 'tiktok', label: 'TikTok' },
   { value: 'twitter', label: 'Twitter/X' },
   { value: 'instagram', label: 'Instagram' },
@@ -139,6 +141,8 @@ const platformDomain = computed(() => {
   const map: Record<string, string> = {
     douyin: 'douyin.com',
     bilibili: 'bilibili.com',
+    kuaishou: 'kuaishou.com',
+    weibo: 'weibo.com',
     tiktok: 'tiktok.com',
     twitter: 'twitter.com',
     instagram: 'instagram.com',

@@ -1,3 +1,4 @@
+import { parseKuaishouVideo } from '../utils/kuaishou'
 import { execFile } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { promisify } from 'node:util'
@@ -87,9 +88,34 @@ export default defineEventHandler(async (event) => {
   }
 
   // Extract real URL from mixed text (抖音分享文本等)
-  const cleanUrl = extractUrl(url) || url
+  let cleanUrl = extractUrl(url) || url
   if (!cleanUrl) {
     throw createError({ statusCode: 400, message: '未找到有效的视频链接' })
+  }
+
+  // Resolve short links (t.cn for Weibo, kuaishou.com/f/, v.douyin.com, etc.)
+  if (cleanUrl.includes('t.cn/') || cleanUrl.includes('kuaishou.com/f/') || cleanUrl.includes('v.douyin.com')) {
+    try {
+      const resp = await fetch(cleanUrl, {
+        redirect: 'manual',
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+      })
+      const location = resp.headers.get('location') || ''
+      if (location) {
+        let resolved = location.startsWith('http') ? location : `https://www.kuaishou.com${location}`
+        // Strip share tracking params from Kuaishou URLs
+        const u = new URL(resolved)
+        if (u.hostname.includes('kuaishou.com')) {
+          u.search = ''
+          cleanUrl = u.toString()
+        } else {
+          cleanUrl = resolved
+        }
+        console.log(`[parse] Resolved: ${url} → ${cleanUrl}`)
+      }
+    } catch {
+      // Keep original URL
+    }
   }
 
   const platform = detectPlatform(cleanUrl)
@@ -103,6 +129,18 @@ export default defineEventHandler(async (event) => {
       }
     } catch {
       // Fall through to yt-dlp
+    }
+  }
+
+  // Custom Kuaishou parser: yt-dlp has no Kuaishou extractor, use Playwright
+  if (platform?.host === 'kuaishou') {
+    try {
+      const kuaishouResult = await parseKuaishouVideo(cleanUrl)
+      if (kuaishouResult) {
+        return { code: 200, data: kuaishouResult }
+      }
+    } catch {
+      // Fall through to yt-dlp (will fail with "Unsupported URL")
     }
   }
 
@@ -198,14 +236,19 @@ export default defineEventHandler(async (event) => {
 
     let msg = err.stderr?.split('\n')[0] || err.message || '未知错误'
 
-    // Give specific guidance for Douyin cookie issues
-    if (msg.includes('Fresh cookies') && platform?.host === 'douyin') {
+    // Give specific guidance for Douyin failures
+    if (platform?.host === 'douyin') {
       const userFile = userCookieFile('douyin')
-      if (existsSync(userFile)) {
-        msg = '已保存的抖音Cookie无效或已过期，请重新导出并保存'
+      if (!existsSync(userFile)) {
+        msg = '需要抖音Cookie才能解析。请在页面下方"Cookie管理"中上传Cookie后重试'
       } else {
-        msg = '需要抖音Cookie。请在页面下方"Cookie管理"中上传Cookie后重试'
+        msg = '已保存的抖音Cookie无效或已过期，请重新导出并保存'
       }
+    }
+
+    // Give specific guidance for Kuaishou failures
+    if (platform?.host === 'kuaishou') {
+      msg = '快手解析失败：页面数据加载不完整，请确认链接是否正确或稍后重试'
     }
 
     throw createError({ statusCode: 422, message: `解析失败：${msg}` })
