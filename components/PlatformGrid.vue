@@ -9,7 +9,7 @@
       <img
         width="36"
         height="36"
-        :src="p.icon"
+        :src="baseURL + p.icon"
         :alt="p.name"
         class="w-9 h-9 object-contain"
         loading="lazy"
@@ -26,5 +26,10 @@ const props = withDefaults(defineProps<{
   platformList?: typeof platforms
 }>(), {
   platformList: () => platforms
+})
+
+const baseURL = computed(() => {
+  const base = useRuntimeConfig().app.baseURL || '/'
+  return base.endsWith('/') ? base.slice(0, -1) : base
 })
 </script>
