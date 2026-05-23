@@ -13,6 +13,7 @@ export default defineNuxtConfig({
     }
   },
   app: {
+    baseURL: '/xiaoyuevideo/',
     head: {
       title: '全网视频在线下载_哔哩哔哩_抖音_YouTube_快手等平台视频保存_xiaoyuevideo',
       charset: 'utf-8',
