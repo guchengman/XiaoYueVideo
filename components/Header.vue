@@ -1,6 +1,6 @@
 <template>
-  <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
-    <div class="mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl flex items-center justify-between gap-3 h-14">
+  <header class="bg-white border-b border-gray-200 sticky top-0 z-50 pt-[var(--sat)]">
+    <div class="mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl flex items-center justify-between gap-3 min-h-14 h-14">
       <div class="flex items-center gap-1.5">
         <NuxtLink to="/" class="flex gap-2 items-end">
           <span class="text-2xl font-bold text-[#6366f1]">XiaoYueVideo</span>
@@ -9,7 +9,7 @@
 
       <nav>
         <ul class="items-center gap-x-8 hidden lg:flex">
-          <li class="relative" @mouseenter="openDropdown = true" @mouseleave="openDropdown = false">
+          <li class="relative" @mouseenter="openDropdown = true" @mouseleave="openDropdown = false" @click="toggleDropdown" @touchstart.prevent="toggleDropdown">
             <div class="relative">
               <span class="text-sm font-semibold flex items-center gap-1 cursor-pointer text-gray-700 hover:text-[#6366f1]">
                 视频下载
@@ -41,7 +41,7 @@
       </nav>
 
       <div class="flex items-center gap-3 lg:hidden">
-        <button type="button" class="p-1.5 text-gray-700 hover:bg-gray-50 rounded-md" @click="mobileMenuOpen = !mobileMenuOpen">
+        <button type="button" class="p-3 text-gray-700 hover:bg-gray-50 rounded-md" @click="mobileMenuOpen = !mobileMenuOpen">
           <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M3 12h18M3 6h18M3 18h18" />
           </svg>
@@ -51,16 +51,19 @@
 
     <!-- Mobile menu -->
     <Transition name="fade">
-      <div v-if="mobileMenuOpen" class="lg:hidden border-t border-gray-200 bg-white">
-        <div class="px-4 py-3 space-y-2">
-          <div class="font-semibold text-sm text-gray-500 mb-1">选择平台</div>
-          <NuxtLink v-for="p in allPlatforms" :key="p.id" :to="p.path" class="block px-2 py-1.5 text-sm hover:bg-gray-50 rounded-md"
-            @click="mobileMenuOpen = false">
-            {{ p.name }}
-          </NuxtLink>
-          <div class="border-t border-gray-100 my-2"></div>
+      <div v-if="mobileMenuOpen" class="lg:hidden border-t border-gray-200 bg-white overscroll-contain max-h-[85vh] overflow-y-auto">
+        <div class="px-4 py-3 space-y-1">
+          <template v-for="group in platformGroups" :key="group.label">
+            <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-1 pt-2 pb-0.5">{{ group.label }}</div>
+            <NuxtLink v-for="p in group.platforms" :key="p.id" :to="p.path"
+              class="block px-3 py-3 text-sm hover:bg-gray-50 rounded-md"
+              :class="{ 'text-[#6366f1] bg-indigo-50': isActive(p.path) }" @click="mobileMenuOpen = false">
+              {{ p.name }}
+            </NuxtLink>
+          </template>
+          <div class="border-t border-gray-100 my-1"></div>
           <NuxtLink v-for="item in navItems" :key="item.path" :to="item.path"
-            class="block px-2 py-1.5 text-sm hover:bg-gray-50 rounded-md" @click="mobileMenuOpen = false">
+            class="block px-3 py-3 text-sm hover:bg-gray-50 rounded-md" :class="{ 'text-[#6366f1] bg-indigo-50': isActive(item.path) }" @click="mobileMenuOpen = false">
             {{ item.label }}
           </NuxtLink>
         </div>
@@ -76,8 +79,32 @@ const route = useRoute()
 const openDropdown = ref(false)
 const mobileMenuOpen = ref(false)
 
+function toggleDropdown() {
+  openDropdown.value = !openDropdown.value
+}
+
 const dropdownPlatforms = platforms.slice(0, 9)
-const allPlatforms = platforms
+
+const platformGroups = computed(() => [
+  {
+    label: '热门',
+    platforms: platforms.filter(p =>
+      ['youtube', 'bilibili', 'douyin', 'kuaishou', 'tiktok', 'twitter', 'ins', 'facebook', 'weibo', 'xiaohongshu'].includes(p.id)
+    ),
+  },
+  {
+    label: '视频平台',
+    platforms: platforms.filter(p =>
+      ['ixigua', 'haokan', 'cctv', 'acfun', 'vimeo', 'xpc', 'souhu', 'net163', 'huya', 'douyu'].includes(p.id)
+    ),
+  },
+  {
+    label: '社交/其他',
+    platforms: platforms.filter(p =>
+      ['zhihu', 'pinterest', 'threads', 'weverse', 'gzh', 'toutiao'].includes(p.id)
+    ),
+  },
+])
 
 const navItems = [
   { label: 'VIP免费看', path: '/video/vip' },

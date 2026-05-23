@@ -45,21 +45,23 @@ export async function handleDownload(params: {
       if (params.formatId) baseArgs.push('-f', params.formatId)
       baseArgs.push('-x', '--audio-format', ext)
     } else if (params.formatId) {
-      // Ensure audio by appending bestaudio fallback (ffmpeg merges if needed)
-      baseArgs.push('-f', `${params.formatId}+bestaudio/best[ext=mp4]`)
+      const fmt = params.formatId.includes('+') ? params.formatId : `${params.formatId}+bestaudio/best[ext=mp4]`
+      baseArgs.push('-f', fmt)
     }
     baseArgs.push(params.url)
 
     const child = rawExecFile(ytDlpPath, baseArgs, { timeout: 300000, windowsHide: true, maxBuffer: 1024 * 1024 })
 
     const phase = isAudio ? 'audio' : 'video'
-    child.stderr?.on('data', (data: Buffer) => {
+    function parseProgress(data: Buffer) {
       const text = data.toString()
       const m = text.match(/(\d+(?:\.\d+)?)%/)
       if (m) {
         updateProgress(params.jobId, phase, Math.round(parseFloat(m[1])))
       }
-    })
+    }
+    child.stderr?.on('data', parseProgress)
+    child.stdout?.on('data', parseProgress)
 
     child.on('close', (code) => {
       if (code === 0) {

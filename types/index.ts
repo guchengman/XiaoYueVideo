@@ -6,13 +6,6 @@ export interface Platform {
   description: string
 }
 
-export interface BlogPost {
-  id: string
-  title: string
-  date: string
-  groupId: string
-}
-
 export interface VideoFormat {
   formatId: string
   ext: string
@@ -23,6 +16,13 @@ export interface VideoFormat {
   hasAudio: boolean
 }
 
+export interface Episode {
+  title: string
+  url: string
+  id: string
+  num?: number
+}
+
 export interface VideoInfo {
   displayTitle: string
   host: string
@@ -31,6 +31,7 @@ export interface VideoInfo {
   thumbnail: string
   duration: number
   vid: string
+  episodes?: Episode[]
 }
 
 export interface ParseResult {

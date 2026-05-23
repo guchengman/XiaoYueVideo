@@ -82,10 +82,11 @@ export async function extractAudioFromVideo(videoPath: string, outPath: string, 
  * Download an m3u8/HLS stream and convert to mp4 using ffmpeg.
  * Reports progress by parsing ffmpeg stderr.
  */
-export async function downloadM3u8ToMp4(m3u8Url: string, outPath: string, jobId: string) {
+export async function downloadM3u8ToMp4(m3u8Url: string, outPath: string, jobId: string, host: string = 'kuaishou') {
+  const referer = host === 'kuaishou' ? 'https://www.kuaishou.com/' : `https://www.${host}.com/`
   return new Promise<void>((resolve, reject) => {
     const ffmpeg = execFile('ffmpeg', [
-      '-headers', 'Referer: https://www.kuaishou.com/',
+      '-headers', `Referer: ${referer}`,
       '-i', m3u8Url,
       '-c', 'copy',
       '-bsf:a', 'aac_adtstoasc',

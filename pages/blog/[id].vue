@@ -6,16 +6,9 @@
       </NuxtLink>
       <article class="max-w-4xl mx-auto">
         <h1 class="text-3xl lg:text-4xl font-bold mb-6">{{ post?.title || '文章详情' }}</h1>
-        <div class="text-gray-600 leading-relaxed space-y-4">
-          <p>以下是对"{{ post?.title }}"的详细介绍。</p>
-          <p>XiaoYueVideo是一款完全免费、无需注册的高效视频下载工具。</p>
-          <p>使用步骤：</p>
-          <ol class="list-decimal pl-5 space-y-2">
-            <li>从目标平台复制视频链接</li>
-            <li>打开XiaoYueVideo网站并粘贴链接</li>
-            <li>点击解析，等待系统识别视频源</li>
-            <li>选择清晰度并下载视频</li>
-          </ol>
+        <div class="text-gray-600 leading-relaxed space-y-4 prose-a:text-[#6366f1] prose-code:bg-gray-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-strong:text-gray-800" v-html="post?.content || '文章内容加载中...'"></div>
+        <div class="mt-12 pt-6 border-t border-gray-200 text-center text-sm text-gray-400">
+          <p>本文由 XiaoYueVideo 整理发布，仅供参考学习。</p>
         </div>
       </article>
     </div>
@@ -23,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import { blogPosts } from '~/utils/platform'
+import { blogPosts } from '~/utils/blog-data'
 
 const route = useRoute()
 const id = route.params.id as string

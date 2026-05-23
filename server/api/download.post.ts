@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
 
   // Dispatch to platform-specific downloader for single-file hosts (e.g. TikTok uses yt-dlp)
   const CUSTOM_SINGLE_HOSTS = ['tiktok']
-  const needsCustomDownloader = !audioUrl && host && CUSTOM_SINGLE_HOSTS.includes(host)
+  const needsCustomDownloader = host && CUSTOM_SINGLE_HOSTS.includes(host)
 
   if (needsCustomDownloader) {
     const jobId = createJob(ext || 'mp4', filename)
@@ -35,7 +35,8 @@ export default defineEventHandler(async (event) => {
 
   // No audio — download single file (or extract audio from video)
   if (!audioUrl) {
-    const outExt = ext || 'mp4'
+    const audioExts = new Set(['m4a', 'mp3', 'aac', 'opus', 'ogg', 'flac', 'wav', 'wma'])
+    const outExt = extractAudio && ext && !audioExts.has(ext) ? 'm4a' : (ext || 'mp4')
     const isM3u8 = cdnUrl.includes('.m3u8')
     const actualExt = isM3u8 ? 'mp4' : outExt
     const jobId = createJob(actualExt, filename)
@@ -49,7 +50,7 @@ export default defineEventHandler(async (event) => {
         const videoPath = resolve(TEMP_DIR, `${tag}_video.mp4`)
         updateProgress(jobId, 'video', 0)
         if (isM3u8) {
-          await downloadM3u8ToMp4(cdnUrl, videoPath, jobId)
+          await downloadM3u8ToMp4(cdnUrl, videoPath, jobId, host || 'kuaishou')
         } else {
           await downloadWithProgress(cdnUrl, videoPath, jobId, 'video', getFetchOpts(host || 'default'))
         }
@@ -59,7 +60,7 @@ export default defineEventHandler(async (event) => {
         const { unlinkSync } = await import('node:fs')
         try { unlinkSync(videoPath) } catch { /* ignore */ }
       } else if (isM3u8) {
-        await downloadM3u8ToMp4(cdnUrl, outPath, jobId)
+        await downloadM3u8ToMp4(cdnUrl, outPath, jobId, host || 'kuaishou')
       } else {
         await downloadWithProgress(cdnUrl, outPath, jobId, 'video', getFetchOpts(host || 'default'))
       }

@@ -3,5 +3,33 @@
     "allow": [
       "PowerShell(node -e \"fetch\\('http://localhost:3000/api/parse', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify\\({url:'https://www.youtube.com/watch?v=dQw4w9WgXcQ'}\\) }\\).then\\(r=>r.json\\(\\)\\).then\\(d=>console.log\\(JSON.stringify\\(d,null,2\\)\\)\\).catch\\(e=>console.error\\(e\\)\\)\")"
     ]
+  },
+  "enabledMcpjsonServers": [
+    "codegraph"
+  ],
+  "enableAllProjectMcpServers": true,
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "command": "node \".claude/hooks/caveman-mode-tracker.cjs\" --track",
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "command": "node \".claude/hooks/caveman-stats-interceptor.cjs\"",
+            "type": "command"
+          }
+        ]
+      }
+    ]
   }
 }

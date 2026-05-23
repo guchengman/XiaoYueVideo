@@ -1,4 +1,5 @@
 import { createReadStream, existsSync, unlinkSync } from 'node:fs'
+import { Readable } from 'node:stream'
 import { getFetchOpts } from '../downloaders/_shared'
 
 export default defineEventHandler(async (event) => {
@@ -17,19 +18,33 @@ export default defineEventHandler(async (event) => {
 
     const { stat } = await import('node:fs/promises')
     const st = await stat(job.filePath)
-    const mime = job.ext === 'm4a' ? 'audio/mp4' : 'video/mp4'
+    const mimeMap: Record<string, string> = { m4a: 'audio/mp4', mp3: 'audio/mpeg', aac: 'audio/aac', opus: 'audio/opus', ogg: 'audio/ogg', flac: 'audio/flac', wav: 'audio/wav', webm: 'audio/webm' }
+    const mime = mimeMap[job.ext] || 'video/mp4'
     setHeader(event, 'Content-Type', mime)
     const safeName = job.filename || `video.${job.ext}`
     const encoded = encodeURIComponent(safeName)
-    setHeader(event, 'Content-Disposition', `attachment; filename="${encoded}"; filename*=UTF-8''${encoded}`)
-    setHeader(event, 'Content-Length', st.size)
+    const asciiFallback = safeName.replace(/[^\x00-\x7F]/g, '_') || 'video'
+    setHeader(event, 'Content-Disposition', `attachment; filename="${asciiFallback}"; filename*=UTF-8''${encoded}`)
     setHeader(event, 'Access-Control-Allow-Origin', '*')
+    setHeader(event, 'Accept-Ranges', 'bytes')
 
     event.node.res.on('close', () => {
       try { unlinkSync(job.filePath) } catch { /* ignore */ }
       removeJob(jobId)
     })
 
+    const range = getHeader(event, 'Range')
+    if (range) {
+      const parts = range.replace(/bytes=/, '').split('-')
+      const start = parseInt(parts[0], 10)
+      const end = parts[1] ? parseInt(parts[1], 10) : st.size - 1
+      setResponseStatus(event, 206)
+      setHeader(event, 'Content-Range', `bytes ${start}-${end}/${st.size}`)
+      setHeader(event, 'Content-Length', (end - start) + 1)
+      return sendStream(event, createReadStream(job.filePath, { start, end }))
+    }
+
+    setHeader(event, 'Content-Length', st.size)
     return sendStream(event, createReadStream(job.filePath))
   }
 
@@ -57,7 +72,10 @@ export default defineEventHandler(async (event) => {
     return { code: 200, data: { jobId } }
   }
 
+  const inline = query.inline !== undefined
   const filename = query.filename as string || 'video.mp4'
+  const encoded = encodeURIComponent(filename)
+  const asciiName = filename.replace(/[^\x00-\x7F]/g, '_') || 'video'
 
   const opts = getFetchOpts(host)
   const resp = await fetch(cdnUrl, opts)
@@ -65,13 +83,60 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 502, message: `CDN 请求失败: ${resp.status}` })
   }
 
+  // Inline mode: proxy m3u8 playlist as text for hls.js, or stream video for direct URLs
+  if (inline) {
+    try {
+      const pathname = new URL(cdnUrl).pathname
+      if (pathname.endsWith('.m3u8')) {
+        const text = await resp.text()
+        setHeader(event, 'Content-Type', 'application/vnd.apple.mpegurl')
+        setHeader(event, 'Access-Control-Allow-Origin', '*')
+        setHeader(event, 'Access-Control-Allow-Headers', '*')
+        return text
+      }
+    } catch { /* cdnUrl might not be a valid URL for URL constructor */ }
+
+    // Re-fetch with Range header so the browser can seek/scrub
+    const reqRange = getHeader(event, 'Range')
+    const streamResp = reqRange
+      ? await fetch(cdnUrl, { ...opts, headers: { ...opts.headers, Range: reqRange } })
+      : resp
+
+    if (!streamResp.ok) {
+      throw createError({ statusCode: 502, message: `CDN 返回 ${streamResp.status}` })
+    }
+
+    if (streamResp.status === 206) {
+      setResponseStatus(event, 206)
+      const cr = streamResp.headers.get('content-range')
+      if (cr) setHeader(event, 'Content-Range', cr)
+    }
+
+    setHeader(event, 'Accept-Ranges', 'bytes')
+    setHeader(event, 'Access-Control-Allow-Origin', '*')
+    setHeader(event, 'Access-Control-Allow-Headers', '*')
+    setHeader(event, 'Access-Control-Expose-Headers', 'Content-Range, Accept-Ranges')
+
+    const mime = streamResp.headers.get('content-type') || 'video/mp4'
+    setHeader(event, 'Content-Type', mime)
+    setHeader(event, 'Content-Disposition', `inline; filename="${asciiName}"; filename*=UTF-8''${encoded}`)
+    const cl = streamResp.headers.get('content-length')
+    if (cl) setHeader(event, 'Content-Length', cl)
+    if (!streamResp.body) {
+      throw createError({ statusCode: 502, message: 'CDN 返回空响应' })
+    }
+    return sendStream(event, Readable.fromWeb(streamResp.body))
+  }
+
   const mime = resp.headers.get('content-type') || 'video/mp4'
   setHeader(event, 'Content-Type', mime)
-  const encoded = encodeURIComponent(filename)
-  setHeader(event, 'Content-Disposition', `attachment; filename="${encoded}"; filename*=UTF-8''${encoded}`)
+  setHeader(event, 'Content-Disposition', `attachment; filename="${asciiName}"; filename*=UTF-8''${encoded}`)
   setHeader(event, 'Access-Control-Allow-Origin', '*')
   const cl = resp.headers.get('content-length')
   if (cl) setHeader(event, 'Content-Length', cl)
 
-  return sendStream(event, resp.body!)
+  if (!resp.body) {
+    throw createError({ statusCode: 502, message: 'CDN 返回空响应' })
+  }
+  return sendStream(event, Readable.fromWeb(resp.body))
 })

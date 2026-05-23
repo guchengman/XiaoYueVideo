@@ -48,6 +48,11 @@ const hostMap: Record<string, { host: string; hostAlias: string }> = {
   '163.com': { host: 'net163', hostAlias: '网易视频' },
   'threads.net': { host: 'threads', hostAlias: 'Threads' },
   'weverse.io': { host: 'weverse', hostAlias: 'Weverse' },
+  // VIP platforms
+  'v.qq.com': { host: 'qq', hostAlias: '腾讯视频' },
+  'iqiyi.com': { host: 'iqiyi', hostAlias: '爱奇艺' },
+  'youku.com': { host: 'youku', hostAlias: '优酷' },
+  'mgtv.com': { host: 'mgtv', hostAlias: '芒果TV' },
 }
 
 function findYtDlp(): string | null {
@@ -77,6 +82,26 @@ function detectPlatform(url: string) {
 function extractUrl(input: string): string | null {
   const match = input.match(/https?:\/\/[^\s<>"']+/)
   return match ? match[0].replace(/[)）]+$/, '') : null
+}
+
+async function resolveEpisodes(ytDlpPath: string, url: string): Promise<{ title: string; url: string; id: string; num?: number }[]> {
+  try {
+    const { stdout } = await execFileAsync(ytDlpPath, [
+      '--dump-single-json', '--flat-playlist', '--no-warnings', url,
+    ], { timeout: 60000, maxBuffer: 10 * 1024 * 1024, windowsHide: true, env: YT_DLP_ENV })
+    const data = JSON.parse(stdout.trim())
+    if (data.entries && Array.isArray(data.entries)) {
+      return data.entries
+        .filter((e: any) => e.url || e.id)
+        .map((e: any, i: number) => ({
+          title: e.title || `第${i + 1}集`,
+          url: e.url || `https://www.youtube.com/watch?v=${e.id}`,
+          id: e.id || String(i),
+          num: e.playlist_index || i + 1,
+        }))
+    }
+  } catch { /* not a playlist — single video */ }
+  return []
 }
 
 export default defineEventHandler(async (event) => {
@@ -189,8 +214,10 @@ export default defineEventHandler(async (event) => {
           const msg = e.stderr?.toString() || ''
           if (!msg.includes('Could not copy') && !msg.includes('could not find')
             && !msg.includes('decrypt_error') && !msg.includes('operating system error 32')
-            && !msg.includes('DPAPI') && !msg.includes('Failed to decrypt')) {
-            throw e
+            && !msg.includes('DPAPI') && !msg.includes('Failed to decrypt')
+            && !msg.includes('not found')) {
+            console.warn(`[parse] Browser cookie extraction failed (${browser}): ${msg.slice(0, 200)}`)
+            // Continue to next browser instead of throwing
           }
         }
       }
@@ -201,6 +228,24 @@ export default defineEventHandler(async (event) => {
       timeout: 30000, maxBuffer: 10 * 1024 * 1024, windowsHide: true, env: YT_DLP_ENV,
     })
     return stdout
+  }
+
+  // VIP playlist / episode-list mode
+  if (body.playlist) {
+    const episodes = await resolveEpisodes(ytDlpPath, cleanUrl)
+    return {
+      code: 200,
+      data: {
+        displayTitle: platform ? `来自${platform.hostAlias}的视频` : '视频',
+        host: platform?.host || 'unknown',
+        hostAlias: platform?.hostAlias || '视频网站',
+        formats: [],
+        thumbnail: '',
+        duration: 0,
+        vid: '',
+        episodes,
+      },
+    }
   }
 
   try {

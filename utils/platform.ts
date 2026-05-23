@@ -29,17 +29,6 @@ export const platforms: Platform[] = [
   { id: 'douyu', name: '斗鱼', path: '/douyu', icon: '/icons/douyu.png', description: '斗鱼视频下载' },
 ]
 
-export const blogPosts: { title: string; groupId: string }[] = [
-  { title: 'Twitter（X）视频保存方法，这几个技巧很实用', groupId: '0f28fe50-41ef-11f1-975b-077e759ab69d' },
-  { title: 'YouTube视频下载全攻略：多种方案任你选（2026版）', groupId: '82bf0c90-37ab-11f1-9ba4-ff1fceab7067' },
-  { title: 'B站视频下载哪家强？四款热门工具横向评测', groupId: '17baf360-2fda-11f1-b4b3-2d16c4384577' },
-  { title: '抖音视频保存对比：网页在线解析与批量下载哪个好', groupId: '69f86810-2b3e-11f1-a4c4-bd3cc6f302ab' },
-  { title: '微博视频保存从入门到精通：单条与批量下载全攻略', groupId: 'd8f0e0c0-1622-11f1-a9db-3de0f64ab879' },
-  { title: 'Instagram视频下载教程：2026年可用工具汇总', groupId: 'c25711b0-023e-11f1-9a34-6b44950bf749' },
-  { title: 'Vimeo视频如何保存到本地？', groupId: 'c8c6c0c0-c75d-11f0-9ec4-4f2252e83580' },
-  { title: 'TikTok主页批量下载，轻松备份喜欢的视频', groupId: 'de33c4d0-c5e6-11f0-a78a-d19cb9cd3dfe' },
-]
-
 export const faqs = [
   {
     q: 'XiaoYueVideo可以解析哪些网站的视频？',

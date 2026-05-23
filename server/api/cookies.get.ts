@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
     data: {
       exists: true,
       count: validLines.length,
-      preview: content.slice(0, 300),
+      preview: content,
     }
   }
 })

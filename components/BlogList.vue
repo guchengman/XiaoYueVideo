@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import { blogPosts } from '~/utils/platform'
+import { blogPosts } from '~/utils/blog-data'
 
 withDefaults(defineProps<{
   posts?: typeof blogPosts

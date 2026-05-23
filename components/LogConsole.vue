@@ -7,14 +7,21 @@
         <span class="w-3 h-3 rounded-full bg-[#28c840] inline-block"></span>
         <span class="ml-2 font-medium">控制台</span>
       </div>
-      <button @click="store.clearLogs" class="text-gray-500 hover:text-white transition text-xs">
-        清空
-      </button>
+      <div class="flex items-center gap-2">
+        <button @click="expanded = !expanded" class="text-gray-500 hover:text-white transition text-xs" :title="expanded ? '收起' : '展开'">
+          <svg :class="{ 'rotate-180': expanded }" class="w-3 h-3 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+        <button @click="store.clearLogs" class="text-gray-500 hover:text-white transition text-xs">
+          清空
+        </button>
+      </div>
     </div>
-    <div ref="logBody" class="bg-[#252526] p-4 h-64 overflow-y-auto font-mono text-sm leading-6">
+    <div v-if="expanded" ref="logBody" class="bg-[#252526] p-4 max-h-64 sm:h-64 overflow-y-auto font-mono text-sm leading-6">
       <div v-for="(log, i) in store.logs" :key="i" class="log-line whitespace-pre-wrap break-all">
         <span class="text-gray-500 mr-2 select-none">{{ log.time }}</span>
-        <span :class="levelClass(log.level)" class="mr-2 select-none w-12 inline-block text-center text-xs font-bold uppercase rounded">{{ log.level }}</span>
+        <span :class="levelClass(log.level)" class="mr-2 select-none w-12 inline-block text-center text-xs font-bold uppercase rounded shrink-0">{{ log.level }}</span>
         <span :class="msgClass(log.level)">{{ log.msg }}</span>
       </div>
       <div v-if="store.isParsing" class="text-gray-500 mt-1">
@@ -27,6 +34,7 @@
 <script setup lang="ts">
 const store = useVideoStore()
 const logBody = ref<HTMLElement | null>(null)
+const expanded = ref(true)
 
 function levelClass(level: string) {
   return {

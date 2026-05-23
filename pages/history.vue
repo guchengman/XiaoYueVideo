@@ -8,15 +8,15 @@
           </h1>
           <h2 class="py-3 text-sm text-gray-500">查看最近的视频解析记录</h2>
         </div>
-        <button v-if="store.history.length > 0" @click="clearAll"
-          class="text-xs text-gray-400 hover:text-red-500 transition px-3 py-1 border border-gray-200 rounded">
+        <button v-if="history.length > 0" @click="clearAll"
+          class="text-xs text-gray-400 hover:text-red-500 transition px-3 py-2 border border-gray-200 rounded">
           清空记录
         </button>
       </div>
     </div>
 
     <div class="max-w-5xl mx-auto mb-16">
-      <div v-if="store.history.length === 0" class="text-center py-16 text-gray-400">
+      <div v-if="history.length === 0" class="text-center py-16 text-gray-400">
         <svg class="w-16 h-16 mx-auto mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <circle cx="12" cy="12" r="10" />
           <path d="M12 6v6l4 2" />
@@ -26,7 +26,7 @@
 
       <div v-else class="space-y-2">
         <div
-          v-for="(item, index) in store.history"
+          v-for="(item, index) in history"
           :key="index"
           class="flex items-center justify-between border border-gray-200 rounded-lg px-4 py-3 hover:border-[#6366f1]"
         >
@@ -41,14 +41,35 @@
 <script setup lang="ts">
 useHead({ title: '解析历史_XiaoYueVideo' })
 
-const store = useVideoStore()
+const HISTORY_KEY = 'xiaoyuevideo_history'
+
+const history = ref<string[]>([])
+
+onMounted(() => {
+  history.value = loadHistory()
+})
+
+function loadHistory(): string[] {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+function saveHistory(items: string[]) {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(items))
+  } catch { /* ignore */ }
+}
 
 function reParse(url: string) {
-  store.setUrl(url)
-  navigateTo('/')
+  navigateTo({ path: '/', query: { url } })
 }
 
 function clearAll() {
-  store.clearHistory()
+  history.value = []
+  saveHistory([])
 }
 </script>

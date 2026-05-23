@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**语言: 回答请使用中文。**
+
 # Video Publish Project - D:\OPC\videos
 
 ## Project Overview
@@ -82,3 +84,10 @@ Key routing rules:
 - Ship/deploy/PR → invoke /ship or /land-and-deploy
 - Save progress → invoke /context-save
 - Resume context → invoke /context-restore
+
+## Checkpoint 纪律
+
+每完成一个功能 → 更新 CLAUDE_CHECKPOINT.md
+每解决一个 bug → 更新 CLAUDE_CHECKPOINT.md
+每做出一个技术决策 → 记入"关键决策记录"
+每次收工前 → 务必更新"当前正在做的事情"和"下一步计划"
