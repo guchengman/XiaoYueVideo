@@ -172,7 +172,7 @@ import { vipParsers, vipCategories, vipPlatforms, buildParserUrl, parserRecommen
 import type { VipParser } from '~/utils/vip-parsers'
 import type { Episode } from '~/types'
 
-useHead({ title: 'VIP视频免费观看_XiaoYueVideo' })
+useHead({ title: 'VIP视频免费观看_xiaoyuevideo' })
 
 const videoUrl = ref('')
 const selectedParserId = ref(vipParsers[0].id)

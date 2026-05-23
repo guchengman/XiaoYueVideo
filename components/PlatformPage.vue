@@ -29,7 +29,7 @@
         <div class="mt-4 text-gray-600 leading-relaxed space-y-3">
           <p>
             {{ platformName }}拥有海量优质的视频内容。
-            通过XiaoYueVideo，您可以免费将{{ platformName }}视频保存到本地，
+            通过xiaoyuevideo，您可以免费将{{ platformName }}视频保存到本地，
             支持高清画质，无水印，方便快捷。
           </p>
           <p>
@@ -83,6 +83,6 @@ const platformUrls: Record<string, string> = {
 const platformUrl = computed(() => platformUrls[props.platformId] || `https://www.${props.platformId}.com`)
 
 useHead({
-  title: `${props.platformName}视频下载_免费在线保存${props.platformName}视频_XiaoYueVideo`
+  title: `${props.platformName}视频下载_免费在线保存${props.platformName}视频_xiaoyuevideo`
 })
 </script>

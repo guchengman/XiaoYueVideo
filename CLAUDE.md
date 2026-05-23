@@ -52,11 +52,11 @@ Remove-Item .\temp\* -Recurse -Force
 
 上传记录自动写入 `logs/upload_YYYYMM.csv`。
 
-## XiaoYueVideo (视频下载网站)
+## xiaoyuevideo (视频下载网站)
 
-位于 `D:\OPC\videos\XiaoYueVideo\`，基于 Nuxt 3 的视频下载工具站。
-- **所有 XiaoYueVideo 项目的文件、目录、依赖、构建产物等，必须存放在 `D:\OPC\videos\XiaoYueVideo\` 目录下，不得放在其它目录。**
-- GitHub: `guchengman/XiaoYueVideo`（https://github.com/guchengman/XiaoYueVideo）
+位于 `D:\OPC\videos\xiaoyuevideo\`，基于 Nuxt 3 的视频下载工具站。
+- **所有 xiaoyuevideo 项目的文件、目录、依赖、构建产物等，必须存放在 `D:\OPC\videos\xiaoyuevideo\` 目录下，不得放在其它目录。**
+- GitHub: `guchengman/xiaoyuevideo`（https://github.com/guchengman/xiaoyuevideo）
 - 部署前必须先跑 `npm run build` 确认构建无报错
 - 构建产物（`.nuxt/`、`.output/`、`node_modules/`）不提交到 Git
 

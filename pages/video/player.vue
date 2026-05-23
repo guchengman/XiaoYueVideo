@@ -115,7 +115,7 @@
 <script setup lang="ts">
 import type { VideoFormat } from '~/types'
 
-useHead({ title: '在线播放器_XiaoYueVideo' })
+useHead({ title: '在线播放器_xiaoyuevideo' })
 
 const inputUrl = ref('')
 const isLoading = ref(false)

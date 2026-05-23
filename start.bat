@@ -10,7 +10,7 @@ if not exist "logs" mkdir logs
 REM Clear Nuxt/Vite cache to avoid stale import errors
 if exist ".nuxt" rmdir /s /q ".nuxt"
 
-echo Starting XiaoYueVideo dev server...
+echo Starting xiaoyuevideo dev server...
 echo.
 npx nuxi dev
 pause

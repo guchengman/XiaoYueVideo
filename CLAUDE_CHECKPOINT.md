@@ -2,10 +2,10 @@
 最后更新：2026-05-23
 
 ## 1. 项目上下文
-- 项目名称：XiaoYueVideo — 视频下载工具站
+- 项目名称：xiaoyuevideo — 视频下载工具站
 - 技术栈：Nuxt 3 + Vue 3 + TypeScript + Pinia + iconify
 - 当前分支：master
-- 工作目录：`D:\OPC\videos\XiaoYueVideo\`
+- 工作目录：`D:\OPC\videos\xiaoyuevideo\`
 
 ## 2. 已完成的任务
 - [x] 平台特定下载器架构重构（server/downloaders/）

@@ -2,15 +2,15 @@
 
 ## Tools
 
-- `XiaoYueVideo/tools/yt-dlp.exe` — 命令行视频/音频下载器
-  - **所有需登录平台一律带 Cookie**: `XiaoYueVideo/cookies/{platform}_cookies.txt`（Netscape 格式）
-  - 视频: `.\XiaoYueVideo\tools\yt-dlp.exe --cookies XiaoYueVideo/cookies/{platform}_cookies.txt -o "raw/%(title)s.%(ext)s" <url>`
-  - 音频: `.\XiaoYueVideo\tools\yt-dlp.exe --cookies XiaoYueVideo/cookies/{platform}_cookies.txt -x --audio-format mp3 -o "raw/%(title)s.%(ext)s" <url>`
-  - 查看格式: `.\XiaoYueVideo\tools\yt-dlp.exe --cookies XiaoYueVideo/cookies/{platform}_cookies.txt --list-formats <url>`
-  - 调试: `.\XiaoYueVideo\tools\yt-dlp.exe --cookies XiaoYueVideo/cookies/{platform}_cookies.txt --dump-json <url>`
+- `xiaoyuevideo/tools/yt-dlp.exe` — 命令行视频/音频下载器
+  - **所有需登录平台一律带 Cookie**: `xiaoyuevideo/cookies/{platform}_cookies.txt`（Netscape 格式）
+  - 视频: `.\xiaoyuevideo\tools\yt-dlp.exe --cookies xiaoyuevideo/cookies/{platform}_cookies.txt -o "raw/%(title)s.%(ext)s" <url>`
+  - 音频: `.\xiaoyuevideo\tools\yt-dlp.exe --cookies xiaoyuevideo/cookies/{platform}_cookies.txt -x --audio-format mp3 -o "raw/%(title)s.%(ext)s" <url>`
+  - 查看格式: `.\xiaoyuevideo\tools\yt-dlp.exe --cookies xiaoyuevideo/cookies/{platform}_cookies.txt --list-formats <url>`
+  - 调试: `.\xiaoyuevideo\tools\yt-dlp.exe --cookies xiaoyuevideo/cookies/{platform}_cookies.txt --dump-json <url>`
   - **已配置 Cookie**: bilibili, douyin, kuaishou, weibo
   - **待配置 Cookie**: tiktok, instagram, xiaohongshu
-- `XiaoYueVideo/tools/wx_channels_download/` — 微信视频号下载器
+- `xiaoyuevideo/tools/wx_channels_download/` — 微信视频号下载器
   - 管理员运行 `wx_video_download.exe`，自动安装证书并启动代理
   - 打开微信PC端播放视频号视频，会出现下载按钮
   - 下载地址: https://github.com/ltaoo/wx_channels_download/releases

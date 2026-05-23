@@ -4,7 +4,7 @@
     <div class="features">
       <div class="item">
         <h3>免费下载</h3>
-        <p>XiaoYueVideo完全免费，无论是视频解析、下载还是其他功能，都不收取任何费用</p>
+        <p>xiaoyuevideo完全免费，无论是视频解析、下载还是其他功能，都不收取任何费用</p>
       </div>
       <div class="item">
         <h3>无次数限制</h3>

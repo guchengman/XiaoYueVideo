@@ -3,7 +3,7 @@
     <div class="mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl flex items-center justify-between gap-3 min-h-14 h-14">
       <div class="flex items-center gap-1.5">
         <NuxtLink to="/" class="flex gap-2 items-end">
-          <span class="text-2xl font-bold text-[#6366f1]">XiaoYueVideo</span>
+          <span class="text-2xl font-bold text-[#6366f1]">xiaoyuevideo</span>
         </NuxtLink>
       </div>
 

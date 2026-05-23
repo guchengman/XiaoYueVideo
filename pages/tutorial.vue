@@ -4,7 +4,7 @@
       <h1 class="text-3xl lg:text-5xl font-bold">
         <span class="text-[#6366f1]">使用</span>教程
       </h1>
-      <h2 class="py-3 text-sm text-gray-500">XiaoYueVideo 全部功能详解，从入门到进阶</h2>
+      <h2 class="py-3 text-sm text-gray-500">xiaoyuevideo 全部功能详解，从入门到进阶</h2>
     </div>
 
     <div class="max-w-5xl mx-auto mb-16">
@@ -26,12 +26,12 @@
       <div id="download" class="border border-gray-200 rounded-lg p-6 mb-6">
         <h3 class="text-xl font-semibold mb-4 text-[#6366f1]">一、视频下载 — 核心功能</h3>
         <div class="text-gray-600 leading-relaxed space-y-3">
-          <p>XiaoYueVideo 支持抖音、B站、YouTube、快手等 26 个主流视频平台的视频解析与下载。</p>
+          <p>xiaoyuevideo 支持抖音、B站、YouTube、快手等 26 个主流视频平台的视频解析与下载。</p>
 
           <div class="bg-[#f0f0ff] border border-[#6366f1]/20 rounded-lg p-4 space-y-2">
             <p class="font-semibold text-gray-800">操作步骤</p>
             <p><span class="inline-block bg-[#6366f1] text-white w-6 h-6 rounded-full text-center text-xs leading-6 mr-2">1</span> 打开目标视频页面，<strong>复制浏览器地址栏中的完整链接</strong></p>
-            <p><span class="inline-block bg-[#6366f1] text-white w-6 h-6 rounded-full text-center text-xs leading-6 mr-2">2</span> 回到 XiaoYueVideo，将链接 <strong>粘贴到首页输入框</strong></p>
+            <p><span class="inline-block bg-[#6366f1] text-white w-6 h-6 rounded-full text-center text-xs leading-6 mr-2">2</span> 回到 xiaoyuevideo，将链接 <strong>粘贴到首页输入框</strong></p>
             <p><span class="inline-block bg-[#6366f1] text-white w-6 h-6 rounded-full text-center text-xs leading-6 mr-2">3</span> 点击 <strong>"开始"</strong> 按钮，系统自动解析视频源（几秒到十几秒不等）</p>
             <p><span class="inline-block bg-[#6366f1] text-white w-6 h-6 rounded-full text-center text-xs leading-6 mr-2">4</span> 解析完成后，在 <strong>画质选择下拉框</strong> 中挑选需要的清晰度</p>
             <p><span class="inline-block bg-[#6366f1] text-white w-6 h-6 rounded-full text-center text-xs leading-6 mr-2">5</span> 点击 <strong>"保存视频"</strong> 下载视频，或点击 <strong>"提取音频"</strong> 仅下载声音</p>
@@ -112,7 +112,7 @@
       <div id="cookies" class="border border-gray-200 rounded-lg p-6 mb-6">
         <h3 class="text-xl font-semibold mb-4 text-[#6366f1]">四、Cookie 管理 — 下载需要登录的视频</h3>
         <div class="text-gray-600 leading-relaxed space-y-3">
-          <p>抖音、B站、快手、微博、TikTok、Twitter、Instagram、小红书等平台的高清视频或部分内容需要<strong>登录账号</strong>才能访问。上传 Cookie 后，XiaoYueVideo 可以以你的身份解析和下载视频。</p>
+          <p>抖音、B站、快手、微博、TikTok、Twitter、Instagram、小红书等平台的高清视频或部分内容需要<strong>登录账号</strong>才能访问。上传 Cookie 后，xiaoyuevideo 可以以你的身份解析和下载视频。</p>
 
           <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <p class="font-semibold text-yellow-800">安全说明</p>
@@ -124,7 +124,7 @@
 
             <div class="bg-gray-50 rounded-lg p-3">
               <p class="font-semibold text-sm text-gray-800">方式一：Cookie-Editor 浏览器扩展（推荐）</p>
-              <p class="text-sm text-gray-500">Chrome 应用商店安装 Cookie-Editor 扩展 → 打开目标网站并登录 → 点击扩展图标 → Export → 复制内容 → 粘贴到 XiaoYueVideo 的 Cookie 管理面板。</p>
+              <p class="text-sm text-gray-500">Chrome 应用商店安装 Cookie-Editor 扩展 → 打开目标网站并登录 → 点击扩展图标 → Export → 复制内容 → 粘贴到 xiaoyuevideo 的 Cookie 管理面板。</p>
             </div>
 
             <div class="bg-gray-50 rounded-lg p-3">
@@ -149,7 +149,7 @@
       <div id="platforms" class="border border-gray-200 rounded-lg p-6 mb-6">
         <h3 class="text-xl font-semibold mb-4 text-[#6366f1]">五、支持平台一览</h3>
         <div class="text-gray-600 leading-relaxed space-y-3">
-          <p>XiaoYueVideo 目前支持以下 26 个平台的视频解析，每个平台有独立的专题页面和 SEO 优化。</p>
+          <p>xiaoyuevideo 目前支持以下 26 个平台的视频解析，每个平台有独立的专题页面和 SEO 优化。</p>
 
           <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-sm">
             <div class="bg-gray-50 rounded p-2 text-center" v-for="p in platforms" :key="p.id">
@@ -184,7 +184,7 @@
             <p class="font-semibold text-gray-800 mb-1">Q: iPhone / iPad 如何将视频保存到相册？</p>
             <div class="text-sm space-y-1">
               <p>由于 iOS 系统限制，Safari 不能直接下载视频文件到相册。可尝试以下方案：</p>
-              <p>• <strong>方案一</strong>：换用 Chrome 浏览器打开 XiaoYueVideo，下载体验更好</p>
+              <p>• <strong>方案一</strong>：换用 Chrome 浏览器打开 xiaoyuevideo，下载体验更好</p>
               <p>• <strong>方案二</strong>：Safari 下载后，点击分享图标 → "存储到文件"，再通过文件 App 分享到相册</p>
               <p>• <strong>方案三</strong>：使用第三方下载管理器 App 来协助保存</p>
             </div>
@@ -193,7 +193,7 @@
           <div>
             <p class="font-semibold text-gray-800 mb-1">Q: 想批量下载视频怎么办？</p>
             <div class="text-sm space-y-1">
-              <p>XiaoYueVideo 专注于单个视频的在线解析与下载。如需批量处理，推荐使用专业工具：</p>
+              <p>xiaoyuevideo 专注于单个视频的在线解析与下载。如需批量处理，推荐使用专业工具：</p>
               <p>• <strong>yt-dlp</strong>：强大的命令行工具，支持 YouTube、B站等上千个网站的批量下载。本站内置了 yt-dlp，可通过命令行调用</p>
               <p>• 各平台官方 App 的离线缓存功能（如 B站、YouTube Premium）</p>
             </div>
@@ -222,14 +222,14 @@
           <div>
             <p class="font-semibold text-gray-800 mb-1">Q: 下载的视频没有声音？</p>
             <div class="text-sm space-y-1">
-              <p>这是 DASH 流媒体技术导致的——高清视频和音频分开传输。XiaoYueVideo 会在下载时<strong>自动合并音视频</strong>，你不需要做任何额外操作。如果使用"提取音频"功能，则只会下载音频轨道。</p>
+              <p>这是 DASH 流媒体技术导致的——高清视频和音频分开传输。xiaoyuevideo 会在下载时<strong>自动合并音视频</strong>，你不需要做任何额外操作。如果使用"提取音频"功能，则只会下载音频轨道。</p>
             </div>
           </div>
 
           <div>
             <p class="font-semibold text-gray-800 mb-1">Q: 网站会存储我下载的视频吗？</p>
             <div class="text-sm space-y-1">
-              <p><strong>不会。</strong> XiaoYueVideo 仅作为代理转发视频流，不存储任何视频文件。下载的视频直接从源 CDN 传输到你的设备，服务器不会保留副本。合并产生的临时文件在传输完成后立即删除。</p>
+              <p><strong>不会。</strong> xiaoyuevideo 仅作为代理转发视频流，不存储任何视频文件。下载的视频直接从源 CDN 传输到你的设备，服务器不会保留副本。合并产生的临时文件在传输完成后立即删除。</p>
             </div>
           </div>
 
@@ -247,5 +247,5 @@
 <script setup lang="ts">
 import { platforms } from '~/utils/platform'
 
-useHead({ title: '使用教程_XiaoYueVideo视频下载帮助' })
+useHead({ title: '使用教程_xiaoyuevideo视频下载帮助' })
 </script>

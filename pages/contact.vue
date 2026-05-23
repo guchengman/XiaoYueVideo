@@ -55,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-useHead({ title: '联系我们_XiaoYueVideo' })
+useHead({ title: '联系我们_xiaoyuevideo' })
 
 const form = reactive({ email: '', content: '' })
 const submitted = ref(false)

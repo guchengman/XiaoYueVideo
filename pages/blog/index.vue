@@ -26,5 +26,5 @@
 <script setup lang="ts">
 import { blogPosts } from '~/utils/blog-data'
 
-useHead({ title: '博客文章_XiaoYueVideo下载技巧' })
+useHead({ title: '博客文章_xiaoyuevideo下载技巧' })
 </script>

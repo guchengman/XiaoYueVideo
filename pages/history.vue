@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-useHead({ title: '解析历史_XiaoYueVideo' })
+useHead({ title: '解析历史_xiaoyuevideo' })
 
 const HISTORY_KEY = 'xiaoyuevideo_history'
 

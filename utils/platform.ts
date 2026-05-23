@@ -31,11 +31,11 @@ export const platforms: Platform[] = [
 
 export const faqs = [
   {
-    q: 'XiaoYueVideo可以解析哪些网站的视频？',
-    a: 'XiaoYueVideo覆盖了国内外绝大多数主流视频平台，包括Instagram、哔哩哔哩（B站）、抖音、Facebook、Weverse等社交网络和视频站点。此外还支持从未知视频站提取内容，无论是视频、音频还是图片，都能帮助您轻松保存到本地。'
+    q: 'xiaoyuevideo可以解析哪些网站的视频？',
+    a: 'xiaoyuevideo覆盖了国内外绝大多数主流视频平台，包括Instagram、哔哩哔哩（B站）、抖音、Facebook、Weverse等社交网络和视频站点。此外还支持从未知视频站提取内容，无论是视频、音频还是图片，都能帮助您轻松保存到本地。'
   },
   {
-    q: '手机端（Android/iOS）能用XiaoYueVideo吗？',
+    q: '手机端（Android/iOS）能用xiaoyuevideo吗？',
     a: '当然可以。Android手机通过Chrome、UC、360、QQ等主流浏览器都能正常使用，推荐Chrome以获得最佳体验。iOS设备（iPhone、iPad）自带的Safari浏览器因系统限制不支持直接下载文件，建议前往教程页面了解如何保存视频到相册。'
   },
   {
