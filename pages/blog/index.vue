@@ -84,15 +84,12 @@
 </template>
 
 <script setup lang="ts">
-import { blogPosts } from '~/utils/blog-data'
-
-import { computed } from 'vue'
-
 const pageSize = 10
-const allPosts = [...blogPosts].reverse()
+const { data: postsData } = await useFetch('/api/blog')
+const allPosts = computed(() => postsData.value || [])
 const route = useRoute()
 
-const totalPages = computed(() => Math.ceil(allPosts.length / pageSize))
+const totalPages = computed(() => Math.ceil(allPosts.value.length / pageSize))
 
 const currentPage = computed(() => {
   const raw = Number(route.query.page) || 1
@@ -101,7 +98,7 @@ const currentPage = computed(() => {
 
 const pagedPosts = computed(() => {
   const page = currentPage.value
-  return allPosts.slice((page - 1) * pageSize, page * pageSize)
+  return allPosts.value.slice((page - 1) * pageSize, page * pageSize)
 })
 
 useHead({

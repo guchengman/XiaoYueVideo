@@ -25,7 +25,6 @@
 </template>
 
 <script setup lang="ts">
-import { blogPosts } from '~/utils/blog-data'
-
-const recentPosts = [...blogPosts].reverse().slice(0, 5)
+const { data: postsData } = await useFetch('/api/blog')
+const recentPosts = computed(() => (postsData.value || []).slice(0, 5))
 </script>

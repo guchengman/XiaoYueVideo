@@ -16,18 +16,16 @@
 </template>
 
 <script setup lang="ts">
-import { blogPosts } from '~/utils/blog-data'
-
 const route = useRoute()
 const id = route.params.id as string
 
-const post = blogPosts.find(p => p.groupId === id)
+const { data: post } = await useFetch(`/api/blog/${id}`)
 
 useHead({
-  title: `${post?.title || '文章详情'} - xiaoyuevideo`
+  title: computed(() => `${post.value?.title || '文章详情'} - xiaoyuevideo`)
 })
 
-if (!post) {
+if (!post.value) {
   throw createError({ statusCode: 404, message: '文章不存在' })
 }
 </script>
